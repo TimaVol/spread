@@ -3,11 +3,16 @@ import { setTimeout } from "timers/promises"; // For async delays
 // --- Configuration ---
 // IMPORTANT: Replace these placeholders with your actual values.
 const { IG_BUSINESS_ACCOUNT_ID, FACEBOOK_ACCESS_TOKEN } = process.env;
-const VIDEO_URL = "https://cdn.pixabay.com/video/2025/05/01/275983_large.mp4"; // Must be a publicly accessible URL (e.g., from a CDN)
+const VIDEO_URL = "https://cdn.pixabay.com/video/2025/06/03/283533_large.mp4"; // Must be a publicly accessible URL (e.g., from a CDN)
 const CAPTION = "My awesome new Reel! #reels #instagram";
 
 // --- API Endpoints ---
 const GRAPH_API_BASE_URL = "https://graph.facebook.com/v23.0"; // Use a recent stable version, e.g., v19.0, v20.0, etc.
+
+// --- Delays ---
+const INITIAL_POLLING_DELAY = 30 * 1000; // 60 seconds initial delay before first poll
+const POLLING_INTERVAL = 60 * 1000; // 60 seconds between subsequent polls
+const MAX_POLLING_ATTEMPTS = 3; // Increased max attempts to account for longer videos
 
 /**
  * Creates a media container for an Instagram Reel.
@@ -62,13 +67,9 @@ async function createMediaContainer(videoUrl, caption) {
  * @param {number} maxAttempts - Maximum number of polling attempts.
  * @returns {Promise<boolean>} True if the container finished successfully, false otherwise.
  */
-async function pollMediaContainerStatus(
-  containerId,
-  interval = 20000,
-  maxAttempts = 3
-) {
+async function pollMediaContainerStatus(containerId) {
   console.log(`Polling status for container ${containerId}...`);
-  for (let i = 0; i < maxAttempts; i++) {
+  for (let i = 0; i < MAX_POLLING_ATTEMPTS; i++) {
     try {
       const params = new URLSearchParams({
         fields: "status_code",
@@ -91,7 +92,7 @@ async function pollMediaContainerStatus(
       const data = await response.json();
       const statusCode = data.status_code;
       console.log(
-        `Container status: ${statusCode} (Attempt ${i + 1}/${maxAttempts})`
+        `Container status: ${statusCode} (Attempt ${i + 1}/${MAX_POLLING_ATTEMPTS})`
       );
 
       if (statusCode === "FINISHED") {
@@ -103,11 +104,11 @@ async function pollMediaContainerStatus(
         return false;
       }
       // If not finished, wait and try again
-      await setTimeout(interval);
+      await setTimeout(POLLING_INTERVAL);
     } catch (error) {
       console.error("Error polling media container status:", error.message);
       // Don't re-throw immediately, try again unless it's a critical error
-      await setTimeout(interval); // Wait before retrying
+      await setTimeout(POLLING_INTERVAL); // Wait before retrying
     }
   }
   console.error(
@@ -191,6 +192,11 @@ async function postReel(videoUrl, caption) {
 
   try {
     const containerId = await createMediaContainer(videoUrl, caption);
+
+    // Initial delay before starting the polling loop
+    console.log(`Waiting for ${INITIAL_POLLING_DELAY / 1000} seconds before first status check...`);
+    await setTimeout(INITIAL_POLLING_DELAY);
+
     const isFinished = await pollMediaContainerStatus(containerId);
 
     if (isFinished) {
