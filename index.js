@@ -1,9 +1,8 @@
 // Ensure you're using Node.js v18+ for native fetch support
 
-const IG_USER_ID = 'YOUR_IG_USER_ID'; // e.g., 1784xxxxxxxxxxxxx
-const PAGE_ACCESS_TOKEN = 'YOUR_PAGE_ACCESS_TOKEN';
-const VIDEO_URL = 'https://your-public-video-link.mp4'; // must be HTTPS and public
-const CAPTION = '🚀 New Reel posted via fetch!';
+const { IG_USER_ID, USER_ACCESS_TOKEN } = process.env;
+const VIDEO_URL = 'https://videos.openai.com/...'; // must be HTTPS and public
+const CAPTION = '🚀 New Reel posted!';
 
 // Step 1: Create Media Container
 async function createMediaContainer() {
@@ -13,7 +12,7 @@ async function createMediaContainer() {
     media_type: 'REELS',
     video_url: VIDEO_URL,
     caption: CAPTION,
-    access_token: PAGE_ACCESS_TOKEN,
+    access_token: USER_ACCESS_TOKEN,
   });
 
   const response = await fetch(url, {
@@ -24,7 +23,7 @@ async function createMediaContainer() {
   const data = await response.json();
 
   if (!response.ok) {
-    console.error('Error creating media container:', data);
+    console.error('❌ Error creating media container:', data);
     throw new Error(data.error.message);
   }
 
@@ -38,7 +37,7 @@ async function publishReel(containerId) {
 
   const params = new URLSearchParams({
     creation_id: containerId,
-    access_token: PAGE_ACCESS_TOKEN,
+    access_token: USER_ACCESS_TOKEN,
   });
 
   const response = await fetch(url, {
@@ -49,7 +48,7 @@ async function publishReel(containerId) {
   const data = await response.json();
 
   if (!response.ok) {
-    console.error('Error publishing reel:', data);
+    console.error('❌ Error publishing reel:', data);
     throw new Error(data.error.message);
   }
 
