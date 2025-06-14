@@ -1,8 +1,7 @@
 {
   "name": "spread",
   "dependencies": {
-    "fluent-ffmpeg": "^2.1.3",
-    "nodemon": "^3.1.10",
-    "request-promise": "^4.2.6"
+    "express": "^5.1.0",
+    "nodemon": "^3.1.10"
   }
 }
