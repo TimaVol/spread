@@ -1,15 +1,19 @@
-// index.js (for Render deployment as a Web Service)
+// index.js (for Railway deployment as a Web Service with API Key Security)
 import express from "express";
 import { setTimeout } from "timers/promises";
 
-// --- Configuration: Environment Variables for Render ---
-// Render will provide these as process.env variables
+// --- Configuration: Environment Variables for Railway ---
+// These will be pulled from Railway's environment variables
 const ACCESS_TOKEN = process.env.FACEBOOK_ACCESS_TOKEN;
 const IG_BUSINESS_ACCOUNT_ID = process.env.IG_BUSINESS_ACCOUNT_ID;
 const VIDEO_URL =
   process.env.VIDEO_URL ||
-  "https://cdn.pixabay.com/video/2025/05/01/275983_large.mp4"; // Provide a default or ensure it's always set
+  "https://cdn.pixabay.com/video/2025/05/01/275983_large.mp4";
 const CAPTION = process.env.CAPTION || "My awesome new Reel! #reels #instagram";
+
+// --- SECURITY: API Key ---
+// This must be a long, random string set as an environment variable in Railway
+const REQUIRED_API_KEY = process.env.REEL_POST_API_KEY;
 
 // --- API Endpoints ---
 const GRAPH_API_BASE_URL = "https://graph.facebook.com/v23.0";
@@ -29,10 +33,11 @@ async function safeFetch(url, options = {}) {
   const response = await fetch(url, options);
   if (!response.ok) {
     const errorData = await response.json();
+    console.error(`Fetch error details: ${JSON.stringify(errorData)}`);
     throw new Error(
-      `HTTP error! Status: ${response.status}, Details: ${JSON.stringify(
-        errorData
-      )}`
+      `HTTP error! Status: ${response.status}, Details: ${
+        errorData.message || "Unknown error"
+      }`
     );
   }
   return response.json();
@@ -127,13 +132,17 @@ async function executeReelPost() {
     !ACCESS_TOKEN ||
     ACCESS_TOKEN === "YOUR_LONG_LIVED_FACEBOOK_USER_ACCESS_TOKEN"
   ) {
-    throw new Error("FACEBOOK_ACCESS_TOKEN is not set or is a placeholder.");
+    throw new Error(
+      "FACEBOOK_ACCESS_TOKEN environment variable is not set or is a placeholder."
+    );
   }
   if (
     !IG_BUSINESS_ACCOUNT_ID ||
     IG_BUSINESS_ACCOUNT_ID === "YOUR_INSTAGRAM_BUSINESS_ACCOUNT_ID"
   ) {
-    throw new Error("IG_BUSINESS_ACCOUNT_ID is not set or is a placeholder.");
+    throw new Error(
+      "IG_BUSINESS_ACCOUNT_ID environment variable is not set or is a placeholder."
+    );
   }
   if (!VIDEO_URL) {
     throw new Error("VIDEO_URL is not set or is a placeholder.");
@@ -165,9 +174,32 @@ async function executeReelPost() {
 }
 
 const app = express();
-const PORT = process.env.PORT || 10000; // Render expects the app to listen on process.env.PORT
+const PORT = process.env.PORT || 10000;
 
-app.get("/post-daily-reel", async (req, res) => {
+// Middleware to check API Key
+function verifyApiKey(req, res, next) {
+  const apiKey = req.headers["x-api-key"]; // Expecting the API key in 'x-api-key' header
+
+  if (!REQUIRED_API_KEY || REQUIRED_API_KEY === "YOUR_SECRET_API_KEY_HERE") {
+    // This check is for development/setup. In production, this should always be set.
+    console.error(
+      "REQUIRED_API_KEY environment variable is not set in the server."
+    );
+    return res.status(500).send("Server API Key not configured.");
+  }
+
+  if (apiKey && apiKey === REQUIRED_API_KEY) {
+    next(); // API Key is valid, proceed to the route handler
+  } else {
+    console.warn(
+      `Unauthorized attempt to access /post-daily-reel. Provided API Key: ${apiKey}`
+    );
+    res.status(401).send("Unauthorized: Invalid or missing API Key.");
+  }
+}
+
+// Apply the API key verification middleware to the specific route
+app.get("/post-daily-reel", verifyApiKey, async (req, res) => {
   try {
     const result = await executeReelPost();
     res.status(200).send(result);
@@ -178,7 +210,7 @@ app.get("/post-daily-reel", async (req, res) => {
 
 app.get("/", (req, res) => {
   res.send(
-    "Instagram Reel Poster Service is running. Access /post-daily-reel to trigger."
+    "Instagram Reel Poster Service is running. Access /post-daily-reel (with X-API-Key header) to trigger."
   );
 });
 
