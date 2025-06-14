@@ -6,8 +6,8 @@ import { setTimeout } from "timers/promises";
 // which you will configure directly on the Cron Job service.
 const ACCESS_TOKEN = process.env.FACEBOOK_ACCESS_TOKEN;
 const IG_BUSINESS_ACCOUNT_ID = process.env.IG_BUSINESS_ACCOUNT_ID;
-const VIDEO_URL = process.env.VIDEO_URL || "https://cdn.pixabay.com/video/2025/05/01/275983_large.mp4"; // Provide a default or ensure it's always set
-const CAPTION = process.env.CAPTION || "My awesome new Reel! #reels #instagram #nodejs #automation";
+const VIDEO_URL = process.env.VIDEO_URL || "https://videos.pexels.com/video-files/32134525/13700774_1440_2560_25fps.mp4"; // Provide a default or ensure it's always set
+const CAPTION = process.env.CAPTION || "My awesome new Reel! #reels #instagram";
 
 // --- API Endpoints ---
 const GRAPH_API_BASE_URL = "https://graph.facebook.com/v23.0";
