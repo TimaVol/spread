@@ -82,6 +82,8 @@ async function pollMediaContainerStatus(containerId) {
                 console.error('Error details (if available):', data.error);
                 return false;
             }
+            console.log(`Container is still processing. Waiting for ${POLLING_INTERVAL / 1000} seconds before next check...`);
+            // Wait before the next polling attempt
             await setTimeout(POLLING_INTERVAL);
         } catch (error) {
             console.error('Error polling media container status:', error.message);
