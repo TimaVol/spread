@@ -8,12 +8,12 @@ let FACEBOOK_ACCESS_TOKEN = '';
 let IG_BUSINESS_ACCOUNT_ID = '';
 
 // --- API Endpoints ---
-const GRAPH_API_BASE_URL = "https://graph.facebook.com/v23.0";
+const GRAPH_API_BASE_URL = process.env.GRAPH_API_BASE_URL || "https://graph.facebook.com/v23.0";
 
 // --- Delays for Instagram API Polling ---
 const INITIAL_POLLING_DELAY = 30 * 1000; // 30 seconds initial delay before first poll
 const POLLING_INTERVAL = 20 * 1000; // 20 seconds between subsequent polls
-const MAX_POLLING_ATTEMPTS = 30; // Max attempts for Instagram media container processing
+const MAX_POLLING_ATTEMPTS = 3; // Max attempts for Instagram media container processing
 
 /**
  * Sets the necessary Instagram API credentials for this module.
