@@ -38,7 +38,7 @@ app.get('/', (req, res) => {
 // --- Start the Express Server ---
 app.listen(PORT, () => {
     console.log(`Express server listening on port ${PORT}`);
-    console.log(`Attempting to set webhook for bot...`);
+    // console.log(`Attempting to set webhook for bot...`);
     // Set the webhook once the server is listening
     // bot.setWebHook(WEBHOOK_URL)
     //     .then(() => console.log(`Webhook set successfully to: ${WEBHOOK_URL}`))
