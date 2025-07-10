@@ -1,0 +1,1 @@
+import { FACEBOOK_ACCESS_TOKEN, IG_BUSINESS_ACCOUNT_ID } from '../config/index.js';
