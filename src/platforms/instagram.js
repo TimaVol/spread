@@ -1,78 +1,85 @@
-import { IG_USERNAME, IG_PASSWORD } from '../config/index.js';
-import { IgApiClient, IgLoginTwoFactorRequiredError } from 'instagram-private-api';
-import fs, { readFile } from 'fs';
-import { promisify } from 'util';
-import ffmpeg from 'fluent-ffmpeg';
+import { FACEBOOK_ACCESS_TOKEN, IG_BUSINESS_ACCOUNT_ID } from '../config/index.js';
+import validateVideoFile from '../utils/video-validator.js';
+import { setTimeout } from 'timers/promises';
 
-const readFileAsync = promisify(readFile);
-const ig = new IgApiClient();
+const GRAPH_API_BASE_URL = 'https://graph.facebook.com/v23.0';
+const INITIAL_POLLING_DELAY = 30 * 1000;
+const POLLING_INTERVAL = 20 * 1000;
+const MAX_POLLING_ATTEMPTS = 3;
 
-export async function resizeVideo(inputPath, outputPath) {
-  return new Promise((resolve, reject) => {
-    ffmpeg(inputPath)
-      .outputOptions('-vf', 'scale=480:600')
-      .on('end', () => {
-        console.log('Video resized successfully.');
-        resolve();
-      })
-      .on('error', (err) => {
-        console.error('Error resizing video:', err);
-        reject(err);
-      })
-      .save(outputPath);
-  });
+async function safeFetch(url, options = {}) {
+  const response = await fetch(url, options);
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(`HTTP error! Status: ${response.status}, Details: ${errorData.message || 'Unknown error'}`);
+  }
+  return response.json();
 }
 
-export async function uploadToInstagram({ chatId, videoPath, fileName, bot, waitingFor2FACode }) {
-  const resizedVideoPath = './downloads/' + 'resized_' + fileName;
-  try {
-    ig.state.generateDevice(IG_USERNAME);
-    await ig.account.login(IG_USERNAME, IG_PASSWORD);
-    console.log('Logged in to Instagram');
-    await resizeVideo(videoPath, resizedVideoPath);
-    const videoBuffer = await readFileAsync(resizedVideoPath);
-    const coverBuffer = await readFileAsync('./image3.jpeg');
-    if (!videoBuffer || videoBuffer.byteLength === 0) {
-      throw new Error('Video data is empty or could not be read');
-    }
-    const publishResult = await ig.publish.video({
-      video: videoBuffer,
-      coverImage: coverBuffer,
+async function createMediaContainer(videoUrl, caption) {
+  const params = new URLSearchParams({
+    media_type: 'REELS',
+    video_url: videoUrl,
+    caption: caption,
+    access_token: FACEBOOK_ACCESS_TOKEN,
+    share_to_feed: true,
+  });
+  const url = `${GRAPH_API_BASE_URL}/${IG_BUSINESS_ACCOUNT_ID}/media?${params.toString()}`;
+  const data = await safeFetch(url, { method: 'POST' });
+  return data.id;
+}
+
+async function pollMediaContainerStatus(containerId) {
+  for (let i = 0; i < MAX_POLLING_ATTEMPTS; i++) {
+    const params = new URLSearchParams({
+      fields: 'status_code',
+      access_token: FACEBOOK_ACCESS_TOKEN,
     });
-    console.log('Video uploaded successfully to Instagram:', publishResult);
-    bot.sendMessage(chatId, 'Video has been uploaded to Instagram!');
-  } catch (error) {
-    if (error instanceof IgLoginTwoFactorRequiredError) {
-      const { two_factor_info } = error.response.body;
-      waitingFor2FACode.set(chatId, {
-        videoPath: resizedVideoPath,
-        twoFactorInfo: two_factor_info,
-      });
-      bot.sendMessage(chatId, 'Please enter the 2FA code sent to your device:');
+    const url = `${GRAPH_API_BASE_URL}/${containerId}?${params.toString()}`;
+    const data = await safeFetch(url);
+    const statusCode = data.status_code;
+    if (statusCode === 'FINISHED') return true;
+    if (statusCode === 'ERROR' || statusCode === 'EXPIRED') return false;
+    await setTimeout(POLLING_INTERVAL);
+  }
+  return false;
+}
+
+async function publishMediaContainer(containerId) {
+  const params = new URLSearchParams({
+    creation_id: containerId,
+    access_token: FACEBOOK_ACCESS_TOKEN,
+  });
+  const url = `${GRAPH_API_BASE_URL}/${IG_BUSINESS_ACCOUNT_ID}/media_publish?${params.toString()}`;
+  const data = await safeFetch(url, { method: 'POST' });
+  return data.id;
+}
+
+export async function postReelToInstagram(videoUrl, caption, sendMessage) {
+  if (!FACEBOOK_ACCESS_TOKEN || !IG_BUSINESS_ACCOUNT_ID) {
+    await sendMessage('Instagram API credentials are not set.');
+    return;
+  }
+  try {
+    await sendMessage('🔍 Validating video...');
+    const validationResult = await validateVideoFile(videoUrl);
+    if (!validationResult.isValid) {
+      await sendMessage(`❌ Video validation failed: ${validationResult.message}\n${validationResult.issues ? validationResult.issues.join('\n') : ''}`);
+      return;
+    }
+    await sendMessage('📦 Creating Instagram media container...');
+    const containerId = await createMediaContainer(videoUrl, caption);
+    await sendMessage('⏳ Waiting for Instagram to process the video...');
+    await setTimeout(INITIAL_POLLING_DELAY);
+    const isFinished = await pollMediaContainerStatus(containerId);
+    if (isFinished) {
+      await sendMessage('✨ Publishing Reel to Instagram...');
+      const publishedMediaId = await publishMediaContainer(containerId);
+      await sendMessage(`🎉 Reel posted successfully! Media ID: ${publishedMediaId}`);
     } else {
-      console.error('Error uploading video to Instagram:', error);
-      bot.sendMessage(chatId, 'Failed to upload video to Instagram.');
+      await sendMessage('⚠️ Instagram failed to process the video.');
     }
-  } finally {
-    if (!waitingFor2FACode.has(chatId)) {
-      fs.unlink(videoPath, (err) => {
-        if (err) console.error('Error deleting video file:', err);
-      });
-      fs.unlink(resizedVideoPath, (err) => {
-        if (err) console.error('Error deleting resized video file:', err);
-      });
-    }
+  } catch (error) {
+    await sendMessage(`💥 Error posting to Instagram: ${error.message}`);
   }
 }
-
-export async function uploadVideoAfterLogin(chatId, videoPath, bot) {
-  const videoBuffer = fs.readFileSync(videoPath);
-  const publishResult = await ig.publish.video({
-    video: videoBuffer,
-    caption: 'Your video caption here',
-  });
-  console.log('Video uploaded successfully to Instagram:', publishResult);
-  bot.sendMessage(chatId, 'Video has been uploaded to Instagram!');
-}
-
-export { ig };
