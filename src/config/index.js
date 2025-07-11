@@ -7,3 +7,6 @@ export const TELEGRAM_WEBHOOK_PATH = process.env.TELEGRAM_WEBHOOK_PATH || '/webh
 export const PORT = process.env.PORT || 3000;
 export const FACEBOOK_ACCESS_TOKEN = process.env.FACEBOOK_ACCESS_TOKEN;
 export const IG_BUSINESS_ACCOUNT_ID = process.env.IG_BUSINESS_ACCOUNT_ID;
+export const SUPABASE_URL = process.env.SUPABASE_URL || 'https://your-project.supabase.co';
+export const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'your-anon-key';
+export const SUPABASE_BUCKET = process.env.SUPABASE_BUCKET || 'your-bucket-name';
