@@ -8,9 +8,18 @@ import path from 'path';
 
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN);
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const PROJECT_TMP_DIR = path.join(process.cwd(), 'tmp');
 
 function getLocalVideoPath(fileId) {
-  return path.join('/tmp', `${fileId}.mp4`);
+  return path.join(PROJECT_TMP_DIR, `${fileId}.mp4`);
+}
+
+async function ensureTmpDirExists() {
+  try {
+    await fs.mkdir(PROJECT_TMP_DIR, { recursive: true });
+  } catch (err) {
+    // Ignore if already exists
+  }
 }
 
 async function uploadToSupabase(localPath, fileId) {
@@ -45,6 +54,7 @@ export function setupTelegramBotWebhook(app) {
     // Handle video upload
     if (video) {
       const fileId = video.file_id;
+      await ensureTmpDirExists();
       const localPath = getLocalVideoPath(fileId);
       const sendMessage = (message) => bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
       try {
