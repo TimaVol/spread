@@ -1,11 +1,11 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { postReelToInstagram } from '../platforms/instagram.js';
-import { TELEGRAM_TOKEN } from '../config/index.js';
+import { TELEGRAM_BOT_TOKEN, TELEGRAM_AUTHORIZED_USER_ID, TELEGRAM_WEBHOOK_PATH } from '../config/index.js';
 
-const bot = new TelegramBot(TELEGRAM_TOKEN, { webHook: true });
+const bot = new TelegramBot(TELEGRAM_BOT_TOKEN);
 
 export function setupTelegramBotWebhook(app) {
-  app.post('/webhook', (req, res) => {
+  app.post(TELEGRAM_WEBHOOK_PATH, (req, res) => {
     bot.processUpdate(req.body);
     res.sendStatus(200);
   });
@@ -13,6 +13,15 @@ export function setupTelegramBotWebhook(app) {
   bot.on('message', async (msg) => {
     const chatId = msg.chat.id;
     const text = msg.text;
+
+    const authorizedUserIdNum = parseInt(TELEGRAM_AUTHORIZED_USER_ID, 10);
+
+    if (isNaN(authorizedUserIdNum) || authorizedUserIdNum !== chatId) {
+      console.warn(`Unauthorized access attempt from Chat ID: ${chatId}. Message: "${text}"`);
+      await bot.sendMessage(chatId, `🚫 Access Denied: I'm sorry, but this bot is configured for private use only. Your chat ID (${chatId}) is not authorized.`);
+      return; // Stop processing the message
+    }
+
     // Only allow messages with video_url and caption
     const videoUrlMatch = text && text.match(/video_url:\s*(https?:\/\/\S+)/i);
     const captionMatch = text && text.match(/caption:\s*([\s\S]*)/i);
