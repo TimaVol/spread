@@ -2,12 +2,12 @@ import TelegramBot from 'node-telegram-bot-api';
 import { postReelToInstagram } from '../platforms/instagram.js';
 import { TELEGRAM_BOT_TOKEN, TELEGRAM_AUTHORIZED_USER_ID, TELEGRAM_WEBHOOK_PATH } from '../config/index.js';
 import { createClient } from '@supabase/supabase-js';
-import { SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_BUCKET } from '../config/index.js';
+import { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_BUCKET } from '../config/index.js';
 import fs from 'fs/promises';
 import path from 'path';
 
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN);
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 const PROJECT_TMP_DIR = path.join(process.cwd(), 'tmp');
 
 function getLocalVideoPath(fileId) {

@@ -61,12 +61,13 @@ export async function postReelToInstagram(videoUrl, caption, sendMessage) {
     return;
   }
   try {
-    await sendMessage('🔍 Validating video...');
-    const validationResult = await validateVideoFile(videoUrl);
-    if (!validationResult.isValid) {
-      await sendMessage(`❌ Video validation failed: ${validationResult.message}\n${validationResult.issues ? validationResult.issues.join('\n') : ''}`);
-      return;
-    }
+    // await sendMessage('🔍 Validating video...');
+    // const validationResult = await validateVideoFile(videoUrl);
+    // if (!validationResult.isValid) {
+    //   await sendMessage(`❌ Video validation failed: ${validationResult.message}\n${validationResult.issues ? validationResult.issues.join('\n') : ''}`);
+    //   return;
+    // }
+    await sendMessage('🔍 Video validation skipped');
     await sendMessage('📦 Creating Instagram media container...');
     const containerId = await createMediaContainer(videoUrl, caption);
     await sendMessage('⏳ Waiting for Instagram to process the video...');
