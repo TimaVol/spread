@@ -68,7 +68,7 @@ export function setupTelegramBotWebhook(app) {
         const publicUrl = await uploadToSupabase(localPath, fileId);
         await sendMessage('📤 Video uploaded. Posting to Instagram...');
         const caption = msg.caption || '';
-        await postReelToInstagram(publicUrl, caption, sendMessage);
+        await postReelToInstagram(publicUrl, "#anime", sendMessage);
         await sendMessage('🧹 Cleaning up...');
         await fs.unlink(localPath);
         await deleteFromSupabase(fileId);
@@ -86,7 +86,7 @@ export function setupTelegramBotWebhook(app) {
     let caption = captionMatch ? captionMatch[1].trim() : '';
     if (videoUrl) {
       const sendMessage = (message) => bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
-      await postReelToInstagram(videoUrl, caption, sendMessage);
+      await postReelToInstagram(videoUrl, "#anime", sendMessage);
     } else {
       bot.sendMessage(chatId, 'Please send a video file or a message in the following format:\n\nvideo_url: <YOUR_PUBLIC_VIDEO_URL>\ncaption: <YOUR_CAPTION_TEXT>');
     }
