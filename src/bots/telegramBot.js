@@ -55,35 +55,6 @@ export function setupTelegramBotWebhook(app) {
     );
   });
 
-  bot.onText(/^\/ytshort(?:\s+(.+))?$/, async (msg, match) => {
-    const chatId = msg.chat.id;
-    if (parseInt(TELEGRAM_AUTHORIZED_USER_ID, 10) !== chatId) return;
-    const caption = match[1] || msg.caption || '';
-    const video = msg.video || msg.document;
-    if (!video) {
-      await bot.sendMessage(chatId, '❗ Please attach a video to upload as a YouTube Short.');
-      return;
-    }
-    await ensureTmpDirExists();
-    const fileId = video.file_id;
-    const localPath = getLocalVideoPath(fileId);
-    const sendMessage = (message) => bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
-    try {
-      await sendMessage('⬇️ Downloading video from Telegram...');
-      const file = await bot.getFile(fileId);
-      const fileUrl = `https://api.telegram.org/file/bot${TELEGRAM_BOT_TOKEN}/${file.file_path}`;
-      const res = await fetch(fileUrl);
-      const buffer = await res.arrayBuffer();
-      await fs.writeFile(localPath, Buffer.from(buffer));
-      await sendMessage('🚀 Uploading to YouTube Shorts...');
-      await uploadYouTubeShort(Buffer.from(buffer), caption, caption, 'unlisted', sendMessage);
-      await sendMessage('✅ Done!');
-      await fs.unlink(localPath);
-    } catch (err) {
-      await bot.sendMessage(chatId, `❌ Error: ${err.message}`);
-    }
-  });
-
   bot.on('message', async (msg) => {
     const chatId = msg.chat.id;
     const text = msg.text;
@@ -96,7 +67,7 @@ export function setupTelegramBotWebhook(app) {
       return;
     }
 
-    // Handle video upload
+    // Handle video upload to both IG and YouTube Shorts
     if (video) {
       const fileId = video.file_id;
       await ensureTmpDirExists();
@@ -114,6 +85,14 @@ export function setupTelegramBotWebhook(app) {
         await sendMessage('📤 Video uploaded. Posting to Instagram...');
         const caption = msg.caption || '';
         await postReelToInstagram(publicUrl, "#anime", sendMessage);
+        await sendMessage('🚀 Uploading to YouTube Shorts...');
+        // Ensure #anime is in title or description
+        let ytTitle = caption;
+        let ytDesc = caption;
+        if (!ytTitle.includes('#anime') && !ytDesc.includes('#anime')) {
+          ytDesc = ytDesc ? `${ytDesc}\n#anime` : '#anime';
+        }
+        await uploadYouTubeShort(Buffer.from(buffer), ytTitle, ytDesc, 'unlisted', sendMessage);
         await sendMessage('🧹 Cleaning up...');
         await fs.unlink(localPath);
         await deleteFromSupabase(fileId);
