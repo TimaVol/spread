@@ -26,6 +26,9 @@ if (YOUTUBE_REFRESH_TOKEN) {
 }
 
 export function getYouTubeAuthUrl() {
+  console.log('[YouTube OAuth] YOUTUBE_CLIENT_ID:', YOUTUBE_CLIENT_ID);
+  console.log('[YouTube OAuth] YOUTUBE_CLIENT_SECRET:', YOUTUBE_CLIENT_SECRET ? '***set***' : '***missing***');
+  console.log('[YouTube OAuth] REDIRECT_URI:', REDIRECT_URI);
   const state = crypto.randomBytes(16).toString('hex');
   oauthStates.set(state, Date.now());
   const url = oauth2Client.generateAuthUrl({
@@ -34,6 +37,7 @@ export function getYouTubeAuthUrl() {
     state,
     prompt: 'consent',
   });
+  console.log('[YouTube OAuth] Generated Auth URL:', url);
   return { url, state };
 }
 
