@@ -72,8 +72,13 @@ export async function uploadYouTubeShort(videoBuffer, title, description, privac
   if (!YOUTUBE_REFRESH_TOKEN) throw new Error('YOUTUBE_REFRESH_TOKEN not set.');
   await oauth2Client.getAccessToken(); // Ensures token is fresh
   const youtube = google.youtube({ version: 'v3', auth: oauth2Client });
-  const fullTitle = title.includes('#Shorts') ? title : `${title} #Shorts`;
-  const fullDescription = description.includes('#Shorts') ? description : `${description}\n#Shorts`;
+  let fullTitle = title.includes('#Shorts') ? title : `${title} #Shorts`;
+  let fullDescription = description.includes('#Shorts') ? description : `${description}\n#Shorts`;
+  fullTitle = (fullTitle && fullTitle.trim()) ? fullTitle.trim() : 'My YouTube Short #anime';
+  if (!fullTitle) fullTitle = 'My YouTube Short #anime';
+  if (!fullDescription) fullDescription = '#anime';
+  console.log('[YouTube Upload] Final title:', fullTitle);
+  console.log('[YouTube Upload] Final description:', fullDescription);
   try {
     if (sendMessage) await sendMessage('🚀 Uploading video to YouTube Shorts...');
     const res = await youtube.videos.insert({
