@@ -48,7 +48,11 @@ export function setupTelegramBotWebhook(app) {
     const chatId = msg.chat.id;
     if (parseInt(TELEGRAM_AUTHORIZED_USER_ID, 10) !== chatId) return;
     const { url } = getYouTubeAuthUrl();
-    await bot.sendMessage(chatId, `🔗 [Authorize this bot to upload YouTube Shorts](<${url}>)\n\nAfter authorizing, paste the refresh token into your Railway environment as YOUTUBE_REFRESH_TOKEN.`, { parse_mode: 'Markdown' });
+    await bot.sendMessage(
+      chatId,
+      `🔗 [Authorize this bot to upload YouTube Shorts](${url})\n\nAfter authorizing, paste the refresh token into your Railway environment as YOUTUBE_REFRESH_TOKEN.`,
+      { parse_mode: 'Markdown' }
+    );
   });
 
   bot.onText(/^\/ytshort(?:\s+(.+))?$/, async (msg, match) => {
