@@ -1,5 +1,6 @@
 import { google } from 'googleapis';
 import crypto from 'crypto';
+import { Readable } from 'stream';
 import {
   YOUTUBE_CLIENT_ID,
   YOUTUBE_CLIENT_SECRET,
@@ -91,7 +92,7 @@ export async function uploadYouTubeShort(videoBuffer, title, description, privac
       },
       media: {
         mimeType: 'video/mp4',
-        body: Buffer.isBuffer(videoBuffer) ? videoBuffer : Buffer.from(videoBuffer),
+        body: Readable.from(videoBuffer),
       },
     }, {
       // Progress callback

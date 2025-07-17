@@ -82,13 +82,13 @@ export function setupTelegramBotWebhook(app) {
         await fs.writeFile(localPath, Buffer.from(buffer));
         await sendMessage('⬆️ Uploading video to Supabase Storage...');
         const publicUrl = await uploadToSupabase(localPath, fileId);
-        await sendMessage('📤 Video uploaded. Posting to Instagram...');
-        const caption = msg.caption || '';
-        await postReelToInstagram(publicUrl, "#anime", sendMessage);
+        // await sendMessage('📤 Video uploaded. Posting to Instagram...');
+        // const caption = msg.caption || '';
+        // await postReelToInstagram(publicUrl, "#anime", sendMessage);
         await sendMessage('🚀 Uploading to YouTube Shorts...');
         // Ensure #anime is in title or description
-        let ytTitle = caption;
-        let ytDesc = caption;
+        let ytTitle = msg.caption || '';
+        let ytDesc = msg.caption || '';
         if (!ytTitle.includes('#anime') && !ytDesc.includes('#anime')) {
           ytDesc = ytDesc ? `${ytDesc}\n#anime` : '#anime';
         }
