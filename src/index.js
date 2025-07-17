@@ -1,12 +1,14 @@
 // index.js
 import express from 'express';
 import { setupTelegramBotWebhook } from './bots/telegramBot.js';
+import { setupYouTubeOAuthCallback } from './bots/telegramBot.js';
 import { PORT } from './config/index.js';
 
 const app = express();
 app.use(express.json());
 
 setupTelegramBotWebhook(app);
+setupYouTubeOAuthCallback(app);
 
 app.get('/', (req, res) => {
   res.send('Telegram Instagram Reel Bot server is running! Webhook configured.');

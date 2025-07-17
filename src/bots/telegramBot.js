@@ -5,6 +5,11 @@ import { createClient } from '@supabase/supabase-js';
 import { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_BUCKET } from '../config/index.js';
 import fs from 'fs/promises';
 import path from 'path';
+import {
+  getYouTubeAuthUrl,
+  handleYouTubeCallback,
+  uploadYouTubeShort
+} from '../platforms/youtube.js';
 
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN);
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -37,6 +42,42 @@ export function setupTelegramBotWebhook(app) {
   app.post(TELEGRAM_WEBHOOK_PATH, (req, res) => {
     bot.processUpdate(req.body);
     res.sendStatus(200);
+  });
+
+  bot.onText(/^\/auth_youtube$/, async (msg) => {
+    const chatId = msg.chat.id;
+    if (parseInt(TELEGRAM_AUTHORIZED_USER_ID, 10) !== chatId) return;
+    const { url } = getYouTubeAuthUrl();
+    await bot.sendMessage(chatId, `🔗 [Authorize this bot to upload YouTube Shorts](<${url}>)\n\nAfter authorizing, paste the refresh token into your Railway environment as YOUTUBE_REFRESH_TOKEN.`, { parse_mode: 'Markdown' });
+  });
+
+  bot.onText(/^\/ytshort(?:\s+(.+))?$/, async (msg, match) => {
+    const chatId = msg.chat.id;
+    if (parseInt(TELEGRAM_AUTHORIZED_USER_ID, 10) !== chatId) return;
+    const caption = match[1] || msg.caption || '';
+    const video = msg.video || msg.document;
+    if (!video) {
+      await bot.sendMessage(chatId, '❗ Please attach a video to upload as a YouTube Short.');
+      return;
+    }
+    await ensureTmpDirExists();
+    const fileId = video.file_id;
+    const localPath = getLocalVideoPath(fileId);
+    const sendMessage = (message) => bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
+    try {
+      await sendMessage('⬇️ Downloading video from Telegram...');
+      const file = await bot.getFile(fileId);
+      const fileUrl = `https://api.telegram.org/file/bot${TELEGRAM_BOT_TOKEN}/${file.file_path}`;
+      const res = await fetch(fileUrl);
+      const buffer = await res.arrayBuffer();
+      await fs.writeFile(localPath, Buffer.from(buffer));
+      await sendMessage('🚀 Uploading to YouTube Shorts...');
+      await uploadYouTubeShort(Buffer.from(buffer), caption, caption, 'unlisted', sendMessage);
+      await sendMessage('✅ Done!');
+      await fs.unlink(localPath);
+    } catch (err) {
+      await bot.sendMessage(chatId, `❌ Error: ${err.message}`);
+    }
   });
 
   bot.on('message', async (msg) => {
@@ -89,6 +130,19 @@ export function setupTelegramBotWebhook(app) {
       await postReelToInstagram(videoUrl, "#anime", sendMessage);
     } else {
       bot.sendMessage(chatId, 'Please send a video file or a message in the following format:\n\nvideo_url: <YOUR_PUBLIC_VIDEO_URL>\ncaption: <YOUR_CAPTION_TEXT>');
+    }
+  });
+}
+
+// Register the /youtube-callback endpoint for OAuth
+export function setupYouTubeOAuthCallback(app) {
+  app.get('/youtube-callback', async (req, res) => {
+    const { code, state } = req.query;
+    try {
+      const tokens = await handleYouTubeCallback(code, state);
+      res.send(`<h2>Success!</h2><p>Copy this refresh token to your Railway environment as <b>YOUTUBE_REFRESH_TOKEN</b>:</p><pre>${tokens.refresh_token}</pre>`);
+    } catch (err) {
+      res.status(400).send(`<h2>Error</h2><pre>${err.message}</pre>`);
     }
   });
 }
