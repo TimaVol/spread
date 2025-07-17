@@ -91,8 +91,8 @@ export async function uploadYouTubeShort(videoBuffer, title, description, privac
           categoryId: '22', // People & Blogs
         },
         status: {
-          privacyStatus,
-          selfDeclaredMadeForKids: true,
+          privacyStatus: 'public',
+          selfDeclaredMadeForKids: false,
         },
       },
       media: {
