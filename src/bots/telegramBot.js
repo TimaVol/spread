@@ -73,6 +73,7 @@ export function setupTelegramBotWebhook(app) {
       await ensureTmpDirExists();
       const localPath = getLocalVideoPath(fileId);
       const sendMessage = (message) => bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
+      let publicUrl = null;
       try {
         await sendMessage('⬇️ Downloading video from Telegram...');
         const file = await bot.getFile(fileId);
@@ -81,13 +82,14 @@ export function setupTelegramBotWebhook(app) {
         const buffer = await res.arrayBuffer();
         await fs.writeFile(localPath, Buffer.from(buffer));
         await sendMessage('⬆️ Uploading video to Supabase Storage...');
-        const publicUrl = await uploadToSupabase(localPath, fileId);
+        publicUrl = await uploadToSupabase(localPath, fileId);
+        // IG posting is disabled for now
         // await sendMessage('📤 Video uploaded. Posting to Instagram...');
         // const caption = msg.caption || '';
         // await postReelToInstagram(publicUrl, "#anime", sendMessage);
         await sendMessage('🚀 Uploading to YouTube Shorts...');
-        // Ensure #anime is in title or description
-        let ytTitle = msg.caption || '';
+        // Ensure #anime is in title or description and title is not empty
+        let ytTitle = msg.caption && msg.caption.trim() ? msg.caption : 'My YouTube Short #anime';
         let ytDesc = msg.caption || '';
         if (!ytTitle.includes('#anime') && !ytDesc.includes('#anime')) {
           ytDesc = ytDesc ? `${ytDesc}\n#anime` : '#anime';
@@ -98,7 +100,20 @@ export function setupTelegramBotWebhook(app) {
         await deleteFromSupabase(fileId);
         await sendMessage('✅ Done!');
       } catch (err) {
-        await bot.sendMessage(chatId, `❌ Error: ${err.message}`);
+        await sendMessage(`❌ Error: ${err.message || err}`);
+        // Always attempt cleanup
+        try {
+          await fs.unlink(localPath);
+        } catch (e) {
+          await sendMessage(`⚠️ Cleanup error (local): ${e.message || e}`);
+        }
+        if (publicUrl) {
+          try {
+            await deleteFromSupabase(fileId);
+          } catch (e) {
+            await sendMessage(`⚠️ Cleanup error (Supabase): ${e.message || e}`);
+          }
+        }
       }
       return;
     }
