@@ -84,12 +84,9 @@ export function setupTelegramBotWebhook(app) {
         // await sendMessage('⬆️ Uploading video to Supabase Storage...');
         // publicUrl = await uploadToSupabase(localPath, fileId);
         await sendMessage('🚀 Uploading to YouTube Shorts...');
-        // Ensure #anime is in title or description and title is not empty
-        let ytTitle = msg.caption && msg.caption.trim() ? msg.caption : 'My YouTube Short #anime';
-        let ytDesc = msg.caption || '';
-        if (!ytTitle.includes('#anime') && !ytDesc.includes('#anime')) {
-          ytDesc = ytDesc ? `${ytDesc}\n#anime` : '#anime';
-        }
+        // Hardcode title and description for debugging
+        let ytTitle = 'Check out this awesome short! #anime';
+        let ytDesc = 'Watch more amazing content! #anime';
         await uploadYouTubeShort(Buffer.from(buffer), ytTitle, ytDesc, 'unlisted', sendMessage);
         await sendMessage('🧹 Cleaning up...');
         await fs.unlink(localPath);
