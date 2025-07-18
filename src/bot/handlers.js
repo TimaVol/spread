@@ -3,6 +3,7 @@ import { TELEGRAM_BOT_TOKEN, TELEGRAM_AUTHORIZED_USER_ID } from '../config/index
 import { logger } from '../utils/logger.js';
 
 // platforms: { postReelToInstagram, uploadYouTubeShort }
+// fileHandler: { ensureTmpDirExists, getLocalVideoPath, deleteLocalFile, uploadToSupabase, deleteFromSupabase }
 export function registerMessageHandlers(bot, messages, fileHandler, errorHandler, platforms) {
   bot.on('message', async (msg) => {
     const chatId = msg.chat.id;
@@ -31,22 +32,20 @@ export function registerMessageHandlers(bot, messages, fileHandler, errorHandler
         const buffer = await res.arrayBuffer();
         await import('fs/promises').then(fs => fs.writeFile(localPath, Buffer.from(buffer)));
         await sendMessage(messages.uploadingSupabase);
-        // TODO: Move uploadToSupabase to file_handler.js and use here
-        // publicUrl = await uploadToSupabase(localPath, fileId);
-        // await sendMessage(messages.uploaded);
-        // await platforms.postReelToInstagram(publicUrl, '#anime', sendMessage);
-        // await sendMessage(messages.uploadingYouTube);
-        // await platforms.uploadYouTubeShort(Buffer.from(buffer), 'Check out this awesome short! #anime', 'Watch more amazing content! #anime', 'public', sendMessage);
-        // await sendMessage(messages.cleaningUp);
-        // await fileHandler.deleteLocalFile(localPath);
-        // await deleteFromSupabase(fileId);
-        // await sendMessage(messages.done);
-        await sendMessage('✅ Video downloaded and saved locally (demo, upload logic not yet modularized).');
+        publicUrl = await fileHandler.uploadToSupabase(localPath, fileId);
+        await sendMessage(messages.uploaded);
+        await platforms.postReelToInstagram(publicUrl, '#anime', sendMessage);
+        await sendMessage(messages.uploadingYouTube);
+        await platforms.uploadYouTubeShort(Buffer.from(buffer), 'Check out this awesome short! #anime', 'Watch more amazing content! #anime', 'public', sendMessage);
+        await sendMessage(messages.cleaningUp);
+        await fileHandler.deleteLocalFile(localPath);
+        await fileHandler.deleteFromSupabase(fileId);
+        await sendMessage(messages.done);
       } catch (err) {
         await errorHandler(err, { chatId, bot, context: 'Video Upload Handler' });
         // Always attempt cleanup
         try { await fileHandler.deleteLocalFile(localPath); } catch (e) { await sendMessage(messages.cleanupError('local', e.message || e)); }
-        // if (publicUrl) { try { await deleteFromSupabase(fileId); } catch (e) { await sendMessage(messages.cleanupError('Supabase', e.message || e)); } }
+        if (publicUrl) { try { await fileHandler.deleteFromSupabase(fileId); } catch (e) { await sendMessage(messages.cleanupError('Supabase', e.message || e)); } }
       }
       return;
     }
