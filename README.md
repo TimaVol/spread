@@ -12,11 +12,6 @@ A robust, modular Telegram bot for uploading videos to Instagram Reels and YouTu
 ## Usage
 1. Start the bot with `/start` to see instructions.
 2. Send a video file to upload it to both platforms.
-3. Or send a message in this format:
-   ```
-   video_url: <YOUR_PUBLIC_VIDEO_URL>
-   caption: <YOUR_CAPTION_TEXT>
-   ```
 4. Use `/auth_youtube` to get the YouTube authorization link (admin only).
 
 ## Available Commands

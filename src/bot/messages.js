@@ -3,7 +3,6 @@
 
 export const messages = {
   unauthorized: (chatId) => `🚫 Access Denied: This bot is private. Your chat ID (${chatId}) is not authorized.`,
-  sendVideoOrUrl: 'Please send a video file or a message in the following format:\n\nvideo_url: <YOUR_PUBLIC_VIDEO_URL>\ncaption: <YOUR_CAPTION_TEXT>',
   errorOccurred: (context, errMsg) => `❌ Error in ${context}: ${errMsg}`,
   cleanupError: (where, errMsg) => `⚠️ Cleanup error (${where}): ${errMsg}`,
   instagramCredentialsMissing: 'Instagram API credentials are not set.',
@@ -26,10 +25,6 @@ Send a video file to upload it to both Instagram Reels and YouTube Shorts.
 *Commands:*
 /start - Show this message
 /auth_youtube - Get YouTube authorization link
-
-You can also send a message in this format:
-video_url: <YOUR_PUBLIC_VIDEO_URL>
-caption: <YOUR_CAPTION_TEXT>
 
 _This bot is private and only works for the authorized user._`,
   help: `*Available Commands:*

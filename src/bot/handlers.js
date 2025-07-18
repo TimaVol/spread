@@ -59,17 +59,5 @@ export function registerMessageHandlers(bot, messages, fileHandler, errorHandler
       }
       return;
     }
-
-    // Only allow messages with video_url and caption
-    const videoUrlMatch = text && text.match(/video_url:\s*(https?:\/\/\S+)/i);
-    const captionMatch = text && text.match(/caption:\s*([\s\S]*)/i);
-    let videoUrl = videoUrlMatch ? videoUrlMatch[1].trim() : null;
-    let caption = captionMatch ? captionMatch[1].trim() : '';
-    if (videoUrl) {
-      const sendMessage = (message) => bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
-      await platforms.postReelToInstagram(videoUrl, '#anime', sendMessage);
-    } else {
-      bot.sendMessage(chatId, messages.sendVideoOrUrl);
-    }
   });
 }
