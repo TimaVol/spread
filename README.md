@@ -1,45 +1,83 @@
-# spread
+# Instagram & YouTube Shorts Uploader Bot
 
-## Project Purpose
-A script/app to help automate posting videos to social networks. Currently supports:
-- Telegram bot for receiving video links
-- Posting videos to Instagram Reels (YouTube Shorts and TikTok coming soon)
+A robust, modular Telegram bot for uploading videos to Instagram Reels and YouTube Shorts. Built with Node.js, Express, and node-telegram-bot-api. Hosted on Railway.
 
-## Structure
+## Features
+- Upload a video file via Telegram to post to both Instagram Reels and YouTube Shorts
+- Validate videos for platform requirements
+- Centralized error handling and user-friendly messages
+- Modular, maintainable codebase
+- Private bot (only works for the authorized user)
+
+## Usage
+1. Start the bot with `/start` to see instructions.
+2. Send a video file to upload it to both platforms.
+3. Or send a message in this format:
+   ```
+   video_url: <YOUR_PUBLIC_VIDEO_URL>
+   caption: <YOUR_CAPTION_TEXT>
+   ```
+4. Use `/auth_youtube` to get the YouTube authorization link (admin only).
+
+## Available Commands
+- `/start` — Show welcome and usage instructions
+- `/auth_youtube` — Get YouTube authorization link (admin only)
+
+## Project Structure
 ```
 src/
-  bots/           # Bot integrations (Telegram, etc.)
-  platforms/      # Social network posting logic (Instagram, TikTok, YouTube)
-  utils/          # Utilities (video validation, logging, etc.)
-  config/         # Centralized configuration and env loading
-  index.js        # App entry point
-old/              # Legacy code
+  index.js                # Main entry point (Express app)
+  bot/
+    commands.js           # Telegram bot commands
+    handlers.js           # Telegram message handlers
+    messages.js           # Centralized user-facing messages
+  platforms/
+    instagram.js          # Instagram API logic
+    youtube.js            # YouTube API logic
+    tiktok.js             # (stub)
+  utils/
+    file_handler.js       # File download/upload/delete logic
+    error_handler.js      # Centralized error handling
+    logger.js             # Logging utility
+    video-validator.js    # Video validation logic
+  config/
+    index.js              # Loads environment variables
+
+tmp/                      # Temporary file storage
 ```
 
-## Getting Started
-- Configure your environment variables in a `.env` file (see `src/config/index.js` for required vars)
-- Run the app with `npm start` or `pnpm start`
+## Environment Variables
+Set these in Railway or your local `.env`:
+- `TELEGRAM_BOT_TOKEN` — Telegram bot token
+- `TELEGRAM_AUTHORIZED_USER_ID` — Your Telegram user ID
+- `TELEGRAM_WEBHOOK_PATH` — Webhook path (default: `/webhook`)
+- `FACEBOOK_ACCESS_TOKEN` — Instagram Graph API token
+- `IG_BUSINESS_ACCOUNT_ID` — Instagram business account ID
+- `SUPABASE_URL` — Supabase project URL
+- `SUPABASE_SERVICE_ROLE_KEY` — Supabase service role key
+- `SUPABASE_BUCKET` — Supabase storage bucket name
+- `YOUTUBE_CLIENT_ID` — YouTube OAuth client ID
+- `YOUTUBE_CLIENT_SECRET` — YouTube OAuth client secret
+- `YOUTUBE_REFRESH_TOKEN` — YouTube OAuth refresh token
 
-## YouTube Shorts Integration
+## Running Locally
+1. Install dependencies:
+   ```bash
+   npm install
+   # or
+   pnpm install
+   ```
+2. Create a `.env` file with the required variables.
+3. Start the server:
+   ```bash
+   node src/index.js
+   ```
 
-### Environment Variables
-Add the following to your Railway or local `.env`:
-- `YOUTUBE_CLIENT_ID` (from Google Cloud Console)
-- `YOUTUBE_CLIENT_SECRET` (from Google Cloud Console)
-- `YOUTUBE_REFRESH_TOKEN` (obtained after OAuth flow)
-- `YOUTUBE_REDIRECT_URI` (should match the /youtube-callback endpoint, e.g., `https://<your-railway-app-url>/youtube-callback`)
+## Notes
+- Temporary files are stored in the `tmp/` directory and cleaned up after use.
+- Only the authorized user (set by `TELEGRAM_AUTHORIZED_USER_ID`) can use the bot.
+- TikTok integration is not implemented.
 
-### Initial OAuth Setup
-1. Start the bot server.
-2. In Telegram, send `/auth_youtube` to the bot. Click the link to authorize.
-3. After authorizing, copy the `refresh_token` shown in the browser and add it to your Railway environment as `YOUTUBE_REFRESH_TOKEN`.
-4. Restart the bot after updating the environment variable.
+---
 
-### Usage
-- To upload a YouTube Short, send `/ytshort <caption>` with a video attached to the bot.
-- The bot will upload the video as a YouTube Short to your connected channel.
-
-### Notes
-- Only the authorized user (by TELEGRAM_AUTHORIZED_USER_ID) can use these commands.
-- The video must be under 60 seconds and vertical for Shorts eligibility.
-- The bot will automatically add `#Shorts` to the title/description if not present.
+*Refactored for modularity, robustness, and maintainability.*

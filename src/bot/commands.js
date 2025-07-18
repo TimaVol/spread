@@ -2,6 +2,12 @@
 import { TELEGRAM_AUTHORIZED_USER_ID } from '../config/index.js';
 
 export function registerBotCommands(bot, messages, { getYouTubeAuthUrl }) {
+  bot.onText(/^\/start$/, async (msg) => {
+    const chatId = msg.chat.id;
+    if (parseInt(TELEGRAM_AUTHORIZED_USER_ID, 10) !== chatId) return;
+    await bot.sendMessage(chatId, messages.welcome, { parse_mode: 'Markdown' });
+  });
+
   bot.onText(/^\/auth_youtube$/, async (msg) => {
     const chatId = msg.chat.id;
     if (parseInt(TELEGRAM_AUTHORIZED_USER_ID, 10) !== chatId) return;

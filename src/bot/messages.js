@@ -18,5 +18,18 @@ export const messages = {
   waitingInstagram: '⏳ Waiting for Instagram to process the video...',
   publishingInstagram: '✨ Publishing Reel to Instagram...',
   uploadingYouTube: '🚀 Uploading to YouTube Shorts...',
-  cleaningUp: '🧹 Cleaning up...'
+  cleaningUp: '🧹 Cleaning up...',
+  welcome: `👋 *Welcome to the Instagram & YouTube Shorts Uploader Bot!*
+
+Send a video file to upload it to both Instagram Reels and YouTube Shorts.
+
+*Commands:*
+/start - Show this message
+/auth_youtube - Get YouTube authorization link
+
+You can also send a message in this format:
+video_url: <YOUR_PUBLIC_VIDEO_URL>
+caption: <YOUR_CAPTION_TEXT>
+
+_This bot is private and only works for the authorized user._`
 };
