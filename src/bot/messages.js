@@ -31,5 +31,24 @@ You can also send a message in this format:
 video_url: <YOUR_PUBLIC_VIDEO_URL>
 caption: <YOUR_CAPTION_TEXT>
 
-_This bot is private and only works for the authorized user._`
+_This bot is private and only works for the authorized user._`,
+  help: `*Available Commands:*
+/start - Show welcome and usage instructions
+/help - Show this help message
+/ping - Health check
+/status - Show bot status (uptime, temp files, platform keys)
+/cleanup - Manually clean up temp files (admin only)
+/env - Show environment summary (admin only)
+/auth_youtube - Get YouTube authorization link (admin only)
+`,
+  status: ({ uptime, tempFiles, tempSize, supabase, instagram, youtube }) =>
+    `*Bot Status:*
+Uptime: ${Math.floor(uptime)}s
+Temp files: ${tempFiles} (${(tempSize / 1024 / 1024).toFixed(2)} MB)
+Supabase: ${supabase}
+Instagram: ${instagram}
+YouTube: ${youtube}`,
+  env: (env) =>
+    `*Environment Variables:*
+${Object.entries(env).map(([k, v]) => `${k}: \`${v}\``).join('\n')}`,
 };

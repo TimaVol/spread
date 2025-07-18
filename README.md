@@ -21,6 +21,11 @@ A robust, modular Telegram bot for uploading videos to Instagram Reels and YouTu
 
 ## Available Commands
 - `/start` — Show welcome and usage instructions
+- `/help` — Show all available commands and their descriptions
+- `/ping` — Health check (responds with "pong!")
+- `/status` — Show bot status (uptime, temp files, platform keys)
+- `/cleanup` — Manually clean up temp files (admin only)
+- `/env` — Show environment summary (admin only)
 - `/auth_youtube` — Get YouTube authorization link (admin only)
 
 ## Project Structure
