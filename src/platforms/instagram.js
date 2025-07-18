@@ -1,19 +1,34 @@
 import { FACEBOOK_ACCESS_TOKEN, IG_BUSINESS_ACCOUNT_ID } from '../config/index.js';
 import validateVideoFile from '../utils/video-validator.js';
 import { setTimeout } from 'timers/promises';
+import { handleBotError } from '../utils/error_handler.js';
 
 const GRAPH_API_BASE_URL = 'https://graph.facebook.com/v23.0';
 const INITIAL_POLLING_DELAY = 30 * 1000;
 const POLLING_INTERVAL = 20 * 1000;
 const MAX_POLLING_ATTEMPTS = 3;
+const MAX_RETRIES = 3;
 
-async function safeFetch(url, options = {}) {
-  const response = await fetch(url, options);
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(`HTTP error! Status: ${response.status}, Details: ${errorData.message || 'Unknown error'}`);
+async function safeFetch(url, options = {}, attempt = 1) {
+  try {
+    const response = await fetch(url, options);
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`HTTP error! Status: ${response.status}, Details: ${errorData.message || 'Unknown error'}`);
+    }
+    return response.json();
+  } catch (err) {
+    if (attempt < MAX_RETRIES && isTransientError(err)) {
+      await setTimeout(1000 * Math.pow(2, attempt)); // Exponential backoff
+      return safeFetch(url, options, attempt + 1);
+    }
+    throw err;
   }
-  return response.json();
+}
+
+function isTransientError(err) {
+  // Basic check for network or rate limit errors
+  return /429|timeout|network|temporarily unavailable/i.test(err.message);
 }
 
 async function createMediaContainer(videoUrl, caption) {
@@ -61,13 +76,12 @@ export async function postReelToInstagram(videoUrl, caption, sendMessage) {
     return;
   }
   try {
-    // await sendMessage('🔍 Validating video...');
+    // Optionally validate video URL (if public URL)
     // const validationResult = await validateVideoFile(videoUrl);
     // if (!validationResult.isValid) {
     //   await sendMessage(`❌ Video validation failed: ${validationResult.message}\n${validationResult.issues ? validationResult.issues.join('\n') : ''}`);
     //   return;
     // }
-    await sendMessage('🔍 Video validation skipped');
     await sendMessage('📦 Creating Instagram media container...');
     const containerId = await createMediaContainer(videoUrl, caption);
     await sendMessage('⏳ Waiting for Instagram to process the video...');
@@ -81,6 +95,7 @@ export async function postReelToInstagram(videoUrl, caption, sendMessage) {
       await sendMessage('⚠️ Instagram failed to process the video.');
     }
   } catch (error) {
+    await handleBotError(error, { context: 'Instagram API', bot: null, chatId: null });
     await sendMessage(`💥 Error posting to Instagram: ${error.message}`);
   }
 }

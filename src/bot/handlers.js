@@ -1,6 +1,7 @@
 // src/bot/handlers.js
 import { TELEGRAM_BOT_TOKEN, TELEGRAM_AUTHORIZED_USER_ID } from '../config/index.js';
 import { logger } from '../utils/logger.js';
+import validateVideoFile from '../utils/video-validator.js';
 
 // platforms: { postReelToInstagram, uploadYouTubeShort }
 // fileHandler: { ensureTmpDirExists, getLocalVideoPath, deleteLocalFile, uploadToSupabase, deleteFromSupabase }
@@ -31,6 +32,15 @@ export function registerMessageHandlers(bot, messages, fileHandler, errorHandler
         const res = await fetch(fileUrl);
         const buffer = await res.arrayBuffer();
         await import('fs/promises').then(fs => fs.writeFile(localPath, Buffer.from(buffer)));
+        // Validate video before upload
+        await sendMessage('🔍 Validating video...');
+        const validationResult = await validateVideoFile(localPath);
+        if (!validationResult.isValid) {
+          await sendMessage(`❌ Video validation failed: ${validationResult.message}\n${validationResult.issues ? validationResult.issues.join('\n') : ''}`);
+          await fileHandler.deleteLocalFile(localPath);
+          return;
+        }
+        await sendMessage('✅ Video validation passed.');
         await sendMessage(messages.uploadingSupabase);
         publicUrl = await fileHandler.uploadToSupabase(localPath, fileId);
         await sendMessage(messages.uploaded);
