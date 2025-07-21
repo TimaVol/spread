@@ -24,7 +24,7 @@ Send a video file to upload it to both Instagram Reels and YouTube Shorts.
 
 *Commands:*
 /start - Show this message
-/auth_youtube - Get YouTube authorization link
+/auth\_youtube - Get YouTube authorization link
 
 _This bot is private and only works for the authorized user._`,
   help: `*Available Commands:*
@@ -34,7 +34,7 @@ _This bot is private and only works for the authorized user._`,
 /status - Show bot status (uptime, temp files, platform keys)
 /cleanup - Manually clean up temp files (admin only)
 /env - Show environment summary (admin only)
-/auth_youtube - Get YouTube authorization link (admin only)
+/auth\_youtube - Get YouTube authorization link (admin only)
 `,
   status: ({ uptime, tempFiles, tempSize, supabase, instagram, youtube }) =>
     `*Bot Status:*
