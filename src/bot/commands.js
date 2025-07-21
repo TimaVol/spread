@@ -17,7 +17,7 @@ export function registerBotCommands(bot, messages, { getYouTubeAuthUrl }) {
     const chatId = msg.chat.id;
     try {
       if (parseInt(TELEGRAM_AUTHORIZED_USER_ID, 10) !== chatId) return;
-      await bot.sendMessage(chatId, messages.welcome, { parse_mode: 'Markdown' });
+      await bot.sendMessage(chatId, messages.welcome, { parse_mode: 'MarkdownV2' });
     } catch (err) {
       await handleBotError(err, { chatId, bot, context: '/start' });
     }
@@ -26,7 +26,7 @@ export function registerBotCommands(bot, messages, { getYouTubeAuthUrl }) {
   bot.onText(/^\/help$/, async (msg) => {
     const chatId = msg.chat.id;
     try {
-      await bot.sendMessage(chatId, messages.help, { parse_mode: 'Markdown' });
+      await bot.sendMessage(chatId, messages.help, { parse_mode: 'MarkdownV2' });
     } catch (err) {
       await handleBotError(err, { chatId, bot, context: '/help' });
     }
@@ -58,7 +58,7 @@ export function registerBotCommands(bot, messages, { getYouTubeAuthUrl }) {
         instagram: FACEBOOK_ACCESS_TOKEN && IG_BUSINESS_ACCOUNT_ID ? '✅' : '❌',
         youtube: YOUTUBE_CLIENT_ID && YOUTUBE_CLIENT_SECRET && YOUTUBE_REFRESH_TOKEN ? '✅' : '❌',
       });
-      await bot.sendMessage(chatId, statusMsg, { parse_mode: 'Markdown' });
+      await bot.sendMessage(chatId, statusMsg, { parse_mode: 'MarkdownV2' });
     } catch (err) {
       await handleBotError(err, { chatId, bot, context: '/status' });
     }
@@ -103,7 +103,7 @@ export function registerBotCommands(bot, messages, { getYouTubeAuthUrl }) {
         YOUTUBE_CLIENT_SECRET: mask(process.env.YOUTUBE_CLIENT_SECRET),
         YOUTUBE_REFRESH_TOKEN: mask(process.env.YOUTUBE_REFRESH_TOKEN),
       });
-      await bot.sendMessage(chatId, envMsg, { parse_mode: 'Markdown' });
+      await bot.sendMessage(chatId, envMsg, { parse_mode: 'MarkdownV2' });
     } catch (err) {
       await handleBotError(err, { chatId, bot, context: '/env' });
     }
@@ -114,7 +114,7 @@ export function registerBotCommands(bot, messages, { getYouTubeAuthUrl }) {
     try {
       if (parseInt(TELEGRAM_AUTHORIZED_USER_ID, 10) !== chatId) return;
       const { url } = getYouTubeAuthUrl();
-      await bot.sendMessage(chatId, messages.youtubeAuth(url), { parse_mode: 'Markdown' });
+      await bot.sendMessage(chatId, messages.youtubeAuth(url), { parse_mode: 'MarkdownV2' });
     } catch (err) {
       await handleBotError(err, { chatId, bot, context: '/auth_youtube' });
     }
