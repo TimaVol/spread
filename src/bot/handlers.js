@@ -37,8 +37,9 @@ export function registerMessageHandlers(bot, messages, fileHandler, errorHandler
         const validationResult = await validateVideoFile(localPath);
         if (!validationResult.isValid) {
           await sendMessage(`❌ Video validation failed: ${validationResult.message}\n${validationResult.issues ? validationResult.issues.join('\n') : ''}`);
-          await fileHandler.deleteLocalFile(localPath);
-          return;
+          await sendMessage(messages.videoValidationFailedContinue);
+          // await fileHandler.deleteLocalFile(localPath);
+          // return;
         }
         await sendMessage('✅ Video validation passed.');
         await sendMessage(messages.uploadingSupabase);

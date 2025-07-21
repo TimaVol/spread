@@ -30,4 +30,5 @@ YouTube: ${youtube}`,
   env: (env) =>
     `*Environment Variables:*
 ${Object.entries(env).map(([k, v]) => `${k}: \`${v}\``).join('\n')}`,
+  videoValidationFailedContinue: '❌ Video validation failed. But continuing to upload to Instagram and YouTube Shorts',
 };
