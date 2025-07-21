@@ -4,7 +4,7 @@ import { registerBotCommands } from '../bot/commands.js';
 import { registerMessageHandlers } from '../bot/handlers.js';
 import { messages } from '../bot/messages.js';
 import { handleBotError } from '../utils/error_handler.js';
-import { ensureTmpDirExists, getLocalVideoPath, deleteLocalFile } from '../utils/file_handler.js';
+import { ensureTmpDirExists, getLocalVideoPath, deleteLocalFile, uploadToSupabase, deleteFromSupabase } from '../utils/file_handler.js';
 import { postReelToInstagram } from '../platforms/instagram.js';
 import { getYouTubeAuthUrl, handleYouTubeCallback, uploadYouTubeShort } from '../platforms/youtube.js';
 
@@ -31,7 +31,22 @@ export function setupTelegramBotWebhook(app) {
   });
   // Register modular command and message handlers
   registerBotCommands(bot, messages, { postReelToInstagram, getYouTubeAuthUrl });
-  registerMessageHandlers(bot, messages, { ensureTmpDirExists, getLocalVideoPath, deleteLocalFile }, handleBotError, { postReelToInstagram, uploadYouTubeShort });
+  registerMessageHandlers(
+    bot, 
+    messages, 
+    { 
+    ensureTmpDirExists, 
+    getLocalVideoPath, 
+    deleteLocalFile,
+    uploadToSupabase,
+    deleteFromSupabase,
+    },
+    handleBotError, 
+    { 
+      postReelToInstagram, 
+      uploadYouTubeShort 
+    }
+  );
 }
 
 export function setupYouTubeOAuthCallback(app) {

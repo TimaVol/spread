@@ -40,8 +40,9 @@ export function registerMessageHandlers(bot, messages, fileHandler, errorHandler
           await sendMessage(messages.videoValidationFailedContinue);
           // await fileHandler.deleteLocalFile(localPath);
           // return;
+        } else {
+          await sendMessage(messages.videoValidationPassed);
         }
-        await sendMessage('✅ Video validation passed.');
         await sendMessage(messages.uploadingSupabase);
         publicUrl = await fileHandler.uploadToSupabase(localPath, fileId);
         await sendMessage(messages.uploaded);
