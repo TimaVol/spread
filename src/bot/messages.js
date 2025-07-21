@@ -18,8 +18,8 @@ export const messages = {
   publishingInstagram: '✨ Publishing Reel to Instagram...',
   uploadingYouTube: '🚀 Uploading to YouTube Shorts...',
   cleaningUp: '🧹 Cleaning up...',
-  welcome: `👋 *Welcome to the Instagram & YouTube Shorts Uploader Bot!*\n\nSend a video file to upload it to both Instagram Reels and YouTube Shorts.\n\n*Commands:*\n/start \- Show this message\n/auth\_youtube \- Get YouTube authorization link\n\n_This bot is private and only works for the authorized user._`,
-  help: `*Available Commands:*\n/start \- Show welcome and usage instructions\n/help \- Show this help message\n/ping \- Health check\n/status \- Show bot status \(uptime, temp files, platform keys\)\n/cleanup \- Manually clean up temp files \(admin only\)\n/env \- Show environment summary \(admin only\)\n/auth\_youtube \- Get YouTube authorization link \(admin only\)\n`,
+  welcome: `👋 *Welcome to the Instagram & YouTube Shorts Uploader Bot!*\n\nSend a video file to upload it to both Instagram Reels and YouTube Shorts.\n\n*Commands:*\n/start\- Show this message\n/auth\_youtube\- Get YouTube authorization link\n\n_This bot is private and only works for the authorized user._`,
+  help: `*Available Commands:*\n/start\- Show welcome and usage instructions\n/help\- Show this help message\n/ping\- Health check\n/status\- Show bot status \(uptime, temp files, platform keys\)\n/cleanup\- Manually clean up temp files \(admin only\)\n/env\- Show environment summary \(admin only\)\n/auth\_youtube\- Get YouTube authorization link \(admin only\)\n`,
   status: ({ uptime, tempFiles, tempSize, supabase, instagram, youtube }) =>
     `*Bot Status:*
 Uptime: ${Math.floor(uptime)}s
