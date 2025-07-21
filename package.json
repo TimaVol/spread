@@ -2,7 +2,8 @@
   "name": "spread",
   "type": "module",
   "scripts": {
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.7",
@@ -12,5 +13,8 @@
     "google-auth-library": "^10.1.0",
     "googleapis": "^153.0.0",
     "node-telegram-bot-api": "^0.66.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
   }
 }
