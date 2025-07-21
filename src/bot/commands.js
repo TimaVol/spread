@@ -16,7 +16,10 @@ export function registerBotCommands(bot, messages, { getYouTubeAuthUrl }) {
   bot.onText(/^\/start$/, async (msg) => {
     const chatId = msg.chat.id;
     try {
-      if (parseInt(TELEGRAM_AUTHORIZED_USER_ID, 10) !== chatId) return;
+      if (parseInt(TELEGRAM_AUTHORIZED_USER_ID, 10) !== chatId) {
+        await bot.sendMessage(chatId, messages.unauthorized(chatId));
+        return;
+      }
       await bot.sendMessage(chatId, messages.welcome, { parse_mode: 'MarkdownV2' });
     } catch (err) {
       await handleBotError(err, { chatId, bot, context: '/start' });
@@ -26,6 +29,10 @@ export function registerBotCommands(bot, messages, { getYouTubeAuthUrl }) {
   bot.onText(/^\/help$/, async (msg) => {
     const chatId = msg.chat.id;
     try {
+      if (parseInt(TELEGRAM_AUTHORIZED_USER_ID, 10) !== chatId) {
+        await bot.sendMessage(chatId, messages.unauthorized(chatId));
+        return;
+      }
       await bot.sendMessage(chatId, messages.help, { parse_mode: 'MarkdownV2' });
     } catch (err) {
       await handleBotError(err, { chatId, bot, context: '/help' });
@@ -33,8 +40,13 @@ export function registerBotCommands(bot, messages, { getYouTubeAuthUrl }) {
   });
 
   bot.onText(/^\/ping$/, async (msg) => {
+    const chatId = msg.chat.id;
     try {
-      await bot.sendMessage(msg.chat.id, 'pong!');
+      if (parseInt(TELEGRAM_AUTHORIZED_USER_ID, 10) !== chatId) {
+        await bot.sendMessage(chatId, messages.unauthorized(chatId));
+        return;
+      }
+      await bot.sendMessage(chatId, 'pong!');
     } catch (err) {
       await handleBotError(err, { chatId: msg.chat.id, bot, context: '/ping' });
     }
@@ -45,6 +57,10 @@ export function registerBotCommands(bot, messages, { getYouTubeAuthUrl }) {
     let tempFiles = [];
     let tempSize = 0;
     try {
+      if (parseInt(TELEGRAM_AUTHORIZED_USER_ID, 10) !== chatId) {
+        await bot.sendMessage(chatId, messages.unauthorized(chatId));
+        return;
+      }
       tempFiles = await fs.readdir(TMP_DIR);
       for (const file of tempFiles) {
         const stat = await fs.stat(path.join(TMP_DIR, file));
@@ -68,7 +84,7 @@ export function registerBotCommands(bot, messages, { getYouTubeAuthUrl }) {
     const chatId = msg.chat.id;
     try {
       if (parseInt(TELEGRAM_AUTHORIZED_USER_ID, 10) !== chatId) {
-        await bot.sendMessage(chatId, '🚫 Only the admin can use this command.');
+        await bot.sendMessage(chatId, messages.unauthorized(chatId));
         return;
       }
       let deleted = 0;
@@ -87,7 +103,7 @@ export function registerBotCommands(bot, messages, { getYouTubeAuthUrl }) {
     const chatId = msg.chat.id;
     try {
       if (parseInt(TELEGRAM_AUTHORIZED_USER_ID, 10) !== chatId) {
-        await bot.sendMessage(chatId, '🚫 Only the admin can use this command.');
+        await bot.sendMessage(chatId, messages.unauthorized(chatId));
         return;
       }
       const envMsg = messages.env({
@@ -112,7 +128,10 @@ export function registerBotCommands(bot, messages, { getYouTubeAuthUrl }) {
   bot.onText(/^\/auth_youtube$/, async (msg) => {
     const chatId = msg.chat.id;
     try {
-      if (parseInt(TELEGRAM_AUTHORIZED_USER_ID, 10) !== chatId) return;
+      if (parseInt(TELEGRAM_AUTHORIZED_USER_ID, 10) !== chatId) {
+        await bot.sendMessage(chatId, messages.unauthorized(chatId));
+        return;
+      }
       const { url } = getYouTubeAuthUrl();
       await bot.sendMessage(chatId, messages.youtubeAuth(url), { parse_mode: 'MarkdownV2' });
     } catch (err) {
