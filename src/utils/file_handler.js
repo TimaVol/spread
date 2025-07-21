@@ -3,6 +3,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { createClient } from '@supabase/supabase-js';
 import { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_BUCKET } from '../config/index.js';
+import { logger } from './logger.js';
 
 const PROJECT_TMP_DIR = path.join(process.cwd(), 'tmp');
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -11,6 +12,9 @@ export async function ensureTmpDirExists() {
   try {
     await fs.mkdir(PROJECT_TMP_DIR, { recursive: true });
   } catch (err) {
+    if (err.code !== 'EEXIST') {
+      logger.error('Error ensuring tmp dir exists:', err);
+    }
     // Ignore if already exists
   }
 }
@@ -23,6 +27,9 @@ export async function deleteLocalFile(localPath) {
   try {
     await fs.unlink(localPath);
   } catch (err) {
+    if (err.code !== 'ENOENT') {
+      logger.error('Error deleting file:', localPath, err);
+    }
     // Ignore if file does not exist
   }
 }
