@@ -11,6 +11,7 @@ import { handleBotError } from './utils/error_handler.js';
 import fs from 'fs/promises';
 import path from 'path';
 import supabase from './config/supabase.js';
+import { messages } from './bot/messages.js';
 
 const app = express();
 app.use(express.json());
@@ -54,6 +55,7 @@ app.post('/process-queue', async (req, res) => {
     // Delete from Supabase and tmp
     await deleteFromSupabase(filename);
     await deleteLocalFile(tmpPath);
+    await sendMessage(messages.cleaningUp)
     await sendMessage(`✅ Video processed and posted to Instagram and YouTube. Filename: ${filename}`);
   } catch (err) {
     logger.error('Error in /process-queue:', err);
