@@ -59,7 +59,7 @@ app.post('/process-queue', async (req, res) => {
     await deleteFromSupabase(filename);
     await deleteLocalFile(tmpPath);
     await sendMessage(messages.cleaningUp)
-    await sendMessage(`✅ Video processed and posted to Instagram and YouTube. Filename: ${filename}`);
+    await sendMessage(`✅ Video processed and posted to Instagram and YouTube.`);
   } catch (err) {
     logger.error('Error in /process-queue:', err);
     await handleBotError(err, { context: '/process-queue', bot, chatId: TELEGRAM_AUTHORIZED_USER_ID });
