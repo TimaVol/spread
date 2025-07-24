@@ -29,6 +29,7 @@ app.post('/process-queue', async (req, res) => {
   const token = req.header('X-Cron-Secret');
   if (token !== CRON_SECRET_TOKEN) {
     logger.warn('Unauthorized CRON attempt', { ip: req.ip });
+    sendMessage('Unauthorized CRON attempt', { ip: req.ip });
     return res.status(403).send('Forbidden');
   }
   res.status(200).send('Processing started'); // Respond quickly to CRON
