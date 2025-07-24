@@ -10,6 +10,7 @@ import { logger } from './utils/logger.js';
 import { handleBotError } from './utils/error_handler.js';
 import fs from 'fs/promises';
 import path from 'path';
+import supabase from './config/supabase.js';
 
 const app = express();
 app.use(express.json());
@@ -41,7 +42,6 @@ app.post('/process-queue', async (req, res) => {
     const tmpPath = path.join(process.cwd(), 'tmp', filename);
     await ensureTmpDirExists();
     // Download from Supabase Storage
-    const { default: supabase } = await import('./config/supabase.js');
     const { data, error } = await supabase.storage.from(SUPABASE_BUCKET).download(filename);
     if (error) throw error;
     const arrayBuffer = await data.arrayBuffer();
