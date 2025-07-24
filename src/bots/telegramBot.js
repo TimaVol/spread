@@ -5,8 +5,7 @@ import { registerMessageHandlers } from '../bot/handlers.js';
 import { messages } from '../bot/messages.js';
 import { handleBotError } from '../utils/error_handler.js';
 import { ensureTmpDirExists, getLocalVideoPath, deleteLocalFile, uploadToSupabase, deleteFromSupabase } from '../utils/file_handler.js';
-import { postReelToInstagram } from '../platforms/instagram.js';
-import { getYouTubeAuthUrl, handleYouTubeCallback, uploadYouTubeShort } from '../platforms/youtube.js';
+import { getYouTubeAuthUrl, handleYouTubeCallback } from '../platforms/youtube.js';
 
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN);
 
@@ -24,28 +23,26 @@ bot.setMyCommands([
   handleBotError(err, { chatId: TELEGRAM_AUTHORIZED_USER_ID, bot, context: 'Telegram bot command setup' });
 });
 
+export { bot };
+
 export function setupTelegramBotWebhook(app) {
   app.post(TELEGRAM_WEBHOOK_PATH, (req, res) => {
     bot.processUpdate(req.body);
     res.sendStatus(200);
   });
   // Register modular command and message handlers
-  registerBotCommands(bot, messages, { postReelToInstagram, getYouTubeAuthUrl });
+  registerBotCommands(bot, messages, { getYouTubeAuthUrl });
   registerMessageHandlers(
     bot, 
     messages, 
     { 
-    ensureTmpDirExists, 
-    getLocalVideoPath, 
-    deleteLocalFile,
-    uploadToSupabase,
-    deleteFromSupabase,
+      ensureTmpDirExists, 
+      getLocalVideoPath, 
+      deleteLocalFile,
+      uploadToSupabase,
+      deleteFromSupabase,
     },
     handleBotError, 
-    { 
-      postReelToInstagram, 
-      uploadYouTubeShort 
-    }
   );
 }
 

@@ -1,12 +1,11 @@
 // src/utils/file_handler.js
 import fs from 'fs/promises';
 import path from 'path';
-import { createClient } from '@supabase/supabase-js';
-import { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_BUCKET } from '../config/index.js';
+import { SUPABASE_BUCKET } from '../config/index.js';
+import supabase from '../config/supabase.js';
 import { logger } from './logger.js';
 
 const PROJECT_TMP_DIR = path.join(process.cwd(), 'tmp');
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 export async function ensureTmpDirExists() {
   try {
@@ -34,13 +33,18 @@ export async function deleteLocalFile(localPath) {
   }
 }
 
-export async function uploadToSupabase(localPath, fileId) {
-  const fileBuffer = await fs.readFile(localPath);
-  const { data, error } = await supabase.storage.from(SUPABASE_BUCKET).upload(`${fileId}.mp4`, fileBuffer, { upsert: true, contentType: 'video/mp4' });
+export async function uploadToSupabase(fileBuffer, filename) {
+  const { data, error } = await supabase.storage.from(SUPABASE_BUCKET).upload(filename, fileBuffer, { upsert: true, contentType: 'video/mp4' });
   if (error) throw error;
-  return supabase.storage.from(SUPABASE_BUCKET).getPublicUrl(`${fileId}.mp4`).data.publicUrl;
+  return supabase.storage.from(SUPABASE_BUCKET).getPublicUrl(filename).data.publicUrl;
 }
 
-export async function deleteFromSupabase(fileId) {
-  await supabase.storage.from(SUPABASE_BUCKET).remove([`${fileId}.mp4`]);
+export async function deleteFromSupabase(filename) {
+  await supabase.storage.from(SUPABASE_BUCKET).remove([filename]);
+}
+
+export async function listQueuedVideos() {
+  const { data, error } = await supabase.storage.from(SUPABASE_BUCKET).list('', { limit: 1, sortBy: { column: 'created_at', order: 'asc' } });
+  if (error) throw error;
+  return data;
 }

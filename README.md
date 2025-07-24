@@ -81,3 +81,35 @@ Set these in Railway or your local `.env`:
 ---
 
 *Refactored for modularity, robustness, and maintainability.*
+
+# Video Queuing and Automated Posting System
+
+## Overview
+This bot now uses Supabase Storage as a video queue. Videos sent to the Telegram bot are queued in Supabase Storage and processed by a Railway CRON job via a secure Express route.
+
+## Environment Variables
+- `SUPABASE_URL`: Your Supabase project URL
+- `SUPABASE_SERVICE_ROLE_KEY`: Supabase service role key
+- `SUPABASE_BUCKET`: Name of the Supabase Storage bucket for video queue
+- `CRON_SECRET_TOKEN`: Secret token to protect the /process-queue route
+- `CAPTION`: The hardcoded caption for Instagram Reels and YouTube Shorts
+- `TELEGRAM_BOT_TOKEN`, `TELEGRAM_AUTHORIZED_USER_ID`, etc.: Usual bot config
+
+## How It Works
+1. **User sends video to Telegram bot**: Video is downloaded, validated, and uploaded to Supabase Storage with a unique filename. User receives a confirmation message.
+2. **CRON job triggers /process-queue**: Railway CRON job makes a POST request to `/process-queue` with the HTTP header `X-Cron-Secret: CRON_SECRET_TOKEN`.
+3. **Queue Processing**: The route fetches the oldest video from Supabase Storage, downloads it, posts to Instagram and YouTube, deletes it from the queue, and notifies the admin.
+
+## Setting Up the CRON Job (Railway)
+- Schedule a CRON job in Railway to POST to:
+  `https://<your-railway-app-url>/process-queue`
+- Set the HTTP header:
+  `X-Cron-Secret: <your CRON_SECRET_TOKEN>`
+- The route is protected; use the same `CRON_SECRET_TOKEN` as in your Railway environment variables.
+
+## Error Handling
+- If posting fails, the video remains in Supabase Storage for manual retry/inspection.
+- All errors are logged and the admin is notified via Telegram.
+
+## Migration Notes
+- Direct posting to Instagram/YouTube from Telegram is now disabled. All videos are queued and processed asynchronously.

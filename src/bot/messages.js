@@ -32,4 +32,5 @@ YouTube: ${youtube}`,
 ${Object.entries(env).map(([k, v]) => `${k}: \`${v}\``).join('\n')}`,
   videoValidationFailedContinue: '🚀 Video validation failed. But continuing to upload to Instagram and YouTube Shorts',
   videoValidationPassed: '✅ Video validation passed.',
+  queued: '📥 Video received and added to the queue. It will be processed soon!',
 };

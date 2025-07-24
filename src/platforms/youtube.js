@@ -4,7 +4,8 @@ import { Readable } from 'stream';
 import {
   YOUTUBE_CLIENT_ID,
   YOUTUBE_CLIENT_SECRET,
-  YOUTUBE_REFRESH_TOKEN
+  YOUTUBE_REFRESH_TOKEN,
+  CAPTION
 } from '../config/index.js';
 import { handleBotError } from '../utils/error_handler.js';
 
@@ -88,7 +89,7 @@ export async function uploadYouTubeShort(videoBuffer, title, description, privac
           categoryId: '22',
         },
         status: {
-          privacyStatus: 'public',
+          privacyStatus,
           selfDeclaredMadeForKids: false,
         },
       },
@@ -116,4 +117,8 @@ export async function uploadYouTubeShort(videoBuffer, title, description, privac
     await handleBotError(err, { context: 'YouTube API', bot: null, chatId: null });
     throw err;
   }
+}
+
+export async function uploadQueuedYouTubeShort(videoBuffer, sendMessage) {
+  return uploadYouTubeShort(videoBuffer, CAPTION, CAPTION, 'public', sendMessage);
 }
