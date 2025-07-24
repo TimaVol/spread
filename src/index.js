@@ -13,6 +13,8 @@ import path from 'path';
 import supabase from './config/supabase.js';
 import { messages } from './bot/messages.js';
 
+const sendMessage = (msg) => bot.sendMessage(TELEGRAM_AUTHORIZED_USER_ID, msg, { parse_mode: 'Markdown' });
+
 const app = express();
 app.use(express.json());
 
@@ -34,6 +36,7 @@ app.post('/process-queue', async (req, res) => {
     const videos = await listQueuedVideos();
     if (!videos || videos.length === 0) {
       logger.info('No videos to process in bucket.');
+      sendMessage('No videos to process in bucket.')
       return;
     }
     // Get the oldest video
@@ -48,7 +51,6 @@ app.post('/process-queue', async (req, res) => {
     const arrayBuffer = await data.arrayBuffer();
     await fs.writeFile(tmpPath, Buffer.from(arrayBuffer));
     // Post to Instagram
-    const sendMessage = (msg) => bot.sendMessage(TELEGRAM_AUTHORIZED_USER_ID, msg, { parse_mode: 'Markdown' });
     await postQueuedReelToInstagram(supabase.storage.from(SUPABASE_BUCKET).getPublicUrl(filename).data.publicUrl, sendMessage);
     // Post to YouTube Shorts
     await uploadQueuedYouTubeShort(Buffer.from(arrayBuffer), sendMessage);
@@ -60,7 +62,7 @@ app.post('/process-queue', async (req, res) => {
   } catch (err) {
     logger.error('Error in /process-queue:', err);
     await handleBotError(err, { context: '/process-queue', bot, chatId: TELEGRAM_AUTHORIZED_USER_ID });
-    await bot.sendMessage(TELEGRAM_AUTHORIZED_USER_ID, `❌ Error processing video queue: ${err.message}`);
+    await sendMessage(`❌ Error processing video queue: ${err.message}`);
     // Do not delete from Supabase if failed
   }
 });
