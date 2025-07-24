@@ -21,7 +21,7 @@ export function registerMessageHandlers(bot, messages, fileHandler, errorHandler
       const fileId = video.file_id;
       await fileHandler.ensureTmpDirExists();
       // Generate unique filename for Supabase Storage
-      const uniqueFilename = `${Date.now()}_${fileId}.mp4`;
+      const uniqueFilename = `${fileId}.mp4`;
       const sendMessage = (message) => bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
       try {
         await sendMessage(messages.downloading);

@@ -1,7 +1,7 @@
 // index.js
 import express from 'express';
 import { setupTelegramBotWebhook, setupYouTubeOAuthCallback } from './bots/telegramBot.js';
-import { PORT, CRON_SECRET_TOKEN, TELEGRAM_AUTHORIZED_USER_ID } from './config/index.js';
+import { PORT, CRON_SECRET_TOKEN, TELEGRAM_AUTHORIZED_USER_ID, SUPABASE_BUCKET } from './config/index.js';
 import { listQueuedVideos, deleteFromSupabase, ensureTmpDirExists, getLocalVideoPath, deleteLocalFile } from './utils/file_handler.js';
 import { postQueuedReelToInstagram } from './platforms/instagram.js';
 import { uploadQueuedYouTubeShort } from './platforms/youtube.js';
@@ -36,18 +36,19 @@ app.post('/process-queue', async (req, res) => {
     }
     // Get the oldest video
     const video = videos[0];
+    logger.info('video', video);
     const filename = video.name;
     const tmpPath = path.join(process.cwd(), 'tmp', filename);
     await ensureTmpDirExists();
     // Download from Supabase Storage
     const { default: supabase } = await import('./config/supabase.js');
-    const { data, error } = await supabase.storage.from(process.env.SUPABASE_BUCKET).download(filename);
+    const { data, error } = await supabase.storage.from(SUPABASE_BUCKET).download(filename);
     if (error) throw error;
     const arrayBuffer = await data.arrayBuffer();
     await fs.writeFile(tmpPath, Buffer.from(arrayBuffer));
     // Post to Instagram
     const sendMessage = (msg) => bot.sendMessage(TELEGRAM_AUTHORIZED_USER_ID, msg, { parse_mode: 'Markdown' });
-    await postQueuedReelToInstagram(supabase.storage.from(process.env.SUPABASE_BUCKET).getPublicUrl(filename).data.publicUrl, sendMessage);
+    await postQueuedReelToInstagram(supabase.storage.from(SUPABASE_BUCKET).getPublicUrl(filename).data.publicUrl, sendMessage);
     // Post to YouTube Shorts
     await uploadQueuedYouTubeShort(Buffer.from(arrayBuffer), sendMessage);
     // Delete from Supabase and tmp

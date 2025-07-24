@@ -44,7 +44,7 @@ export async function deleteFromSupabase(filename) {
 }
 
 export async function listQueuedVideos() {
-  const { data, error } = await supabase.storage.from(SUPABASE_BUCKET).list('', { limit: 1, sortBy: { column: 'created_at', order: 'asc' } });
+  const { data, error } = await supabase.storage.from(SUPABASE_BUCKET).list('', { limit: 1, sortBy: { column: 'created_at', order: 'desc' } });
   if (error) throw error;
   return data;
 }
