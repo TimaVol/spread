@@ -8,7 +8,7 @@ export const messages = {
   instagramCredentialsMissing: 'Instagram API credentials are not set.',
   instagramSuccess: (mediaId) => `🎉 Reel posted successfully! Media ID: ${mediaId}`,
   instagramFailed: '⚠️ Instagram failed to process the video.',
-  youtubeAuth: (url) => `🔗 [Authorize this bot to upload YouTube Shorts](${url})\n\nAfter authorizing, paste the refresh token into your Railway environment as YOUTUBE_REFRESH_TOKEN.`,
+  youtubeAuth: (url) => `🔗 [Authorize this bot to upload YouTube Shorts](${url})\n\nAfter authorizing, paste the refresh token into your Railway environment as YOUTUBE_REFRESH_TOKEN\\.`,
   done: '✅ Done!',
   downloading: '⬇️ Downloading video from Telegram...',
   uploadingSupabase: '⬆️ Uploading video to Supabase Storage...',
@@ -23,7 +23,7 @@ export const messages = {
   status: ({ uptime, tempFiles, tempSize, supabase, instagram, youtube }) =>
     `*Bot Status:*
 Uptime: ${Math.floor(uptime)}s
-Temp files: ${tempFiles} (${(tempSize / 1024 / 1024).toFixed(2)} MB)
+Temp files: ${tempFiles} \\(${(tempSize / 1024 / 1024).toFixed(2)} MB\\)
 Supabase: ${supabase}
 Instagram: ${instagram}
 YouTube: ${youtube}`,
