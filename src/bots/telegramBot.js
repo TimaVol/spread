@@ -17,7 +17,8 @@ bot.setMyCommands([
   { command: 'status', description: 'Show bot status (uptime, temp files, platform keys)' },
   { command: 'cleanup', description: 'Manually clean up temp files (admin only)' },
   { command: 'env', description: 'Show environment summary (admin only)' },
-  { command: 'auth_youtube', description: 'Get YouTube authorization link (admin only)' }
+  { command: 'auth_youtube', description: 'Get YouTube authorization link (admin only)' },
+  { command: 'videos', description: 'Show number of videos in Supabase bucket' },
 ]).catch((err) => {
   console.error('[BotCommand] Failed to set commands:', err);
   handleBotError(err, { chatId: TELEGRAM_AUTHORIZED_USER_ID, bot, context: 'Telegram bot command setup' });
