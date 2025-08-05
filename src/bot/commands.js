@@ -4,6 +4,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { SUPABASE_URL, SUPABASE_BUCKET, FACEBOOK_ACCESS_TOKEN, IG_BUSINESS_ACCOUNT_ID, YOUTUBE_CLIENT_ID, YOUTUBE_CLIENT_SECRET, YOUTUBE_REFRESH_TOKEN } from '../config/index.js';
 import { handleBotError } from '../utils/error_handler.js';
+import supabase from '../config/supabase.js';
 
 const TMP_DIR = path.join(process.cwd(), 'tmp');
 
@@ -136,6 +137,40 @@ export function registerBotCommands(bot, messages, { getYouTubeAuthUrl }) {
       await bot.sendMessage(chatId, messages.youtubeAuth(url), { parse_mode: 'MarkdownV2' });
     } catch (err) {
       await handleBotError(err, { chatId, bot, context: '/auth_youtube' });
+    }
+  });
+
+  bot.onText(/^\/videos$/, async (msg) => {
+    const chatId = msg.chat.id;
+    try {
+      if (parseInt(TELEGRAM_AUTHORIZED_USER_ID, 10) !== chatId) {
+        await bot.sendMessage(chatId, messages.unauthorized(chatId));
+        return;
+      }
+
+      // List all files in the Supabase bucket
+      const { data, error } = await supabase.storage
+        .from(SUPABASE_BUCKET)
+        .list('', {
+          limit: 1000, // Adjust based on your needs
+          offset: 0
+        });
+
+      if (error) {
+        await bot.sendMessage(chatId, messages.videosError(error.message), { parse_mode: 'MarkdownV2' });
+        return;
+      }
+
+      // Count video files (common video extensions)
+      const videoExtensions = ['.mp4', '.avi', '.mov', '.wmv', '.flv', '.webm', '.mkv', '.m4v'];
+      const videoCount = data.filter(file => {
+        const extension = path.extname(file.name).toLowerCase();
+        return videoExtensions.includes(extension);
+      }).length;
+
+      await bot.sendMessage(chatId, messages.videos(videoCount), { parse_mode: 'MarkdownV2' });
+    } catch (err) {
+      await handleBotError(err, { chatId, bot, context: '/videos' });
     }
   });
   // Add more command handlers here as needed
