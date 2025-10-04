@@ -54,7 +54,7 @@ app.post('/process-queue', async (req, res) => {
     // Post to Instagram
     await postQueuedReelToInstagram(supabase.storage.from(SUPABASE_BUCKET).getPublicUrl(filename).data.publicUrl, sendMessage);
     // Post to YouTube Shorts
-    await uploadQueuedYouTubeShort(Buffer.from(arrayBuffer), sendMessage);
+    // await uploadQueuedYouTubeShort(Buffer.from(arrayBuffer), sendMessage);
     // Delete from Supabase and tmp
     await deleteFromSupabase(filename);
     await deleteLocalFile(tmpPath);
