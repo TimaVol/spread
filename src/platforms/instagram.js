@@ -1,4 +1,4 @@
-import { FACEBOOK_ACCESS_TOKEN, IG_BUSINESS_ACCOUNT_ID, CAPTION } from '../config/index.js';
+import { FACEBOOK_ACCESS_TOKEN, IG_BUSINESS_ACCOUNT_ID } from '../config/index.js';
 import validateVideoFile from '../utils/video-validator.js';
 import { setTimeout } from 'timers/promises';
 import { handleBotError } from '../utils/error_handler.js';
@@ -100,6 +100,6 @@ export async function postReelToInstagram(videoUrl, caption, sendMessage) {
   }
 }
 
-export async function postQueuedReelToInstagram(videoUrl, sendMessage) {
-  return postReelToInstagram(videoUrl, CAPTION, sendMessage);
+export async function postQueuedReelToInstagram(videoUrl, caption, sendMessage) {
+  return postReelToInstagram(videoUrl, caption, sendMessage);
 }
