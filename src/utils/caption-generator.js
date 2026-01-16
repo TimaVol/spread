@@ -30,7 +30,7 @@ export async function generateCaption() {
     const randomPrompt = captionPrompts[Math.floor(Math.random() * captionPrompts.length)];
     
     const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash",
+      model: "gemini-2.5-flash-lite",
       contents: randomPrompt,
     });
     
