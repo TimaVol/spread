@@ -5,7 +5,6 @@ import {
   YOUTUBE_CLIENT_ID,
   YOUTUBE_CLIENT_SECRET,
   YOUTUBE_REFRESH_TOKEN,
-  CAPTION
 } from '../config/index.js';
 import { handleBotError } from '../utils/error_handler.js';
 
@@ -119,6 +118,6 @@ export async function uploadYouTubeShort(videoBuffer, title, description, privac
   }
 }
 
-export async function uploadQueuedYouTubeShort(videoBuffer, sendMessage) {
-  return uploadYouTubeShort(videoBuffer, CAPTION, CAPTION, 'public', sendMessage);
+export async function uploadQueuedYouTubeShort(videoBuffer, title, description, sendMessage) {
+  return uploadYouTubeShort(videoBuffer, title, description, 'public', sendMessage);
 }

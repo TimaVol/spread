@@ -5,6 +5,7 @@ import { PORT, CRON_SECRET_TOKEN, TELEGRAM_AUTHORIZED_USER_ID, SUPABASE_BUCKET }
 import { listQueuedVideos, deleteFromSupabase, ensureTmpDirExists, getLocalVideoPath, deleteLocalFile } from './utils/file_handler.js';
 import { postQueuedReelToInstagram } from './platforms/instagram.js';
 import { uploadQueuedYouTubeShort } from './platforms/youtube.js';
+import { generateCaption } from './utils/caption-generator.js';
 import { bot } from './bots/telegramBot.js';
 import { logger } from './utils/logger.js';
 import { handleBotError } from './utils/error_handler.js';
@@ -51,10 +52,15 @@ app.post('/process-queue', async (req, res) => {
     if (error) throw error;
     const arrayBuffer = await data.arrayBuffer();
     await fs.writeFile(tmpPath, Buffer.from(arrayBuffer));
+    
+    // Generate AI caption
+    const caption = await generateCaption();
+    await sendMessage(`✨ Generated caption: "${caption}"`);
+    
     // Post to Instagram
-    await postQueuedReelToInstagram(supabase.storage.from(SUPABASE_BUCKET).getPublicUrl(filename).data.publicUrl, sendMessage);
+    await postQueuedReelToInstagram(supabase.storage.from(SUPABASE_BUCKET).getPublicUrl(filename).data.publicUrl, caption, sendMessage);
     // Post to YouTube Shorts
-    // await uploadQueuedYouTubeShort(Buffer.from(arrayBuffer), sendMessage);
+    // await uploadQueuedYouTubeShort(Buffer.from(arrayBuffer), caption, caption, sendMessage);
     // Delete from Supabase and tmp
     await deleteFromSupabase(filename);
     await deleteLocalFile(tmpPath);
