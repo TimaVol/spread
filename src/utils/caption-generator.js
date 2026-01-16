@@ -1,5 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
-import { GEMINI_API_KEY, CAPTION } from '../config/index.js';
+import { GEMINI_API_KEY, CAPTION, GEMINI_MODEL } from '../config/index.js';
 import { logger } from './logger.js';
 
 const ai = new GoogleGenAI({
@@ -30,7 +30,7 @@ export async function generateCaption() {
     const randomPrompt = captionPrompts[Math.floor(Math.random() * captionPrompts.length)];
     
     const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash",
+      model: GEMINI_MODEL,
       contents: randomPrompt,
     });
     
