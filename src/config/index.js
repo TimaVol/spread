@@ -16,3 +16,4 @@ export const YOUTUBE_REFRESH_TOKEN = process.env.YOUTUBE_REFRESH_TOKEN;
 export const CRON_SECRET_TOKEN = process.env.CRON_SECRET_TOKEN;
 export const CAPTION = process.env.CAPTION || 'Here is the #anime edit';
 export const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+export const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite';
