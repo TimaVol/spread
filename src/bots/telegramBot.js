@@ -1,10 +1,10 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { TELEGRAM_BOT_TOKEN, TELEGRAM_WEBHOOK_PATH, TELEGRAM_AUTHORIZED_USER_ID } from '../config/index.js';
 import { registerBotCommands } from '../bot/commands.js';
-import { registerMessageHandlers } from '../bot/handlers.js';
+import { registerMessageHandlers, registerPhotoGenerationHandlers } from '../bot/handlers.js';
 import { messages } from '../bot/messages.js';
 import { handleBotError } from '../utils/error_handler.js';
-import { ensureTmpDirExists, getLocalVideoPath, deleteLocalFile, uploadToSupabase, deleteFromSupabase } from '../utils/file_handler.js';
+import { ensureTmpDirExists, getLocalVideoPath, deleteLocalFile, uploadToSupabase, deleteFromSupabase, uploadPhotoToSupabase } from '../utils/file_handler.js';
 import { getYouTubeAuthUrl, handleYouTubeCallback } from '../platforms/youtube.js';
 
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN);
@@ -19,6 +19,7 @@ bot.setMyCommands([
   { command: 'env', description: 'Show environment summary (admin only)' },
   { command: 'auth_youtube', description: 'Get YouTube authorization link (admin only)' },
   { command: 'videos', description: 'Show number of videos in Supabase bucket' },
+  { command: 'generate', description: 'Generate an anime photo with AI' },
 ]).catch((err) => {
   console.error('[BotCommand] Failed to set commands:', err);
   handleBotError(err, { chatId: TELEGRAM_AUTHORIZED_USER_ID, bot, context: 'Telegram bot command setup' });
@@ -44,6 +45,15 @@ export function setupTelegramBotWebhook(app) {
       deleteFromSupabase,
     },
     handleBotError, 
+  );
+  registerPhotoGenerationHandlers(
+    bot,
+    messages,
+    {
+      ensureTmpDirExists,
+      uploadPhotoToSupabase,
+    },
+    handleBotError,
   );
 }
 

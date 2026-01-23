@@ -44,6 +44,18 @@ async function createMediaContainer(videoUrl, caption) {
   return data.id;
 }
 
+async function createPhotoContainer(imageUrl, caption) {
+  const params = new URLSearchParams({
+    media_type: 'IMAGE',
+    image_url: imageUrl,
+    caption: caption,
+    access_token: FACEBOOK_ACCESS_TOKEN,
+  });
+  const url = `${GRAPH_API_BASE_URL}/${IG_BUSINESS_ACCOUNT_ID}/media?${params.toString()}`;
+  const data = await safeFetch(url, { method: 'POST' });
+  return data.id;
+}
+
 async function pollMediaContainerStatus(containerId) {
   for (let i = 0; i < MAX_POLLING_ATTEMPTS; i++) {
     const params = new URLSearchParams({
@@ -102,4 +114,32 @@ export async function postReelToInstagram(videoUrl, caption, sendMessage) {
 
 export async function postQueuedReelToInstagram(videoUrl, caption, sendMessage) {
   return postReelToInstagram(videoUrl, caption, sendMessage);
+}
+
+export async function postPhotoToInstagram(imageUrl, caption, sendMessage) {
+  if (!FACEBOOK_ACCESS_TOKEN || !IG_BUSINESS_ACCOUNT_ID) {
+    await sendMessage('Instagram API credentials are not set.');
+    return;
+  }
+  try {
+    await sendMessage('📦 Creating Instagram photo container...');
+    const containerId = await createPhotoContainer(imageUrl, caption);
+    await sendMessage('⏳ Waiting for Instagram to process the photo...');
+    await setTimeout(INITIAL_POLLING_DELAY);
+    const isFinished = await pollMediaContainerStatus(containerId);
+    if (isFinished) {
+      await sendMessage('✨ Publishing photo to Instagram...');
+      const publishedMediaId = await publishMediaContainer(containerId);
+      await sendMessage(`🎉 Photo posted successfully! Media ID: ${publishedMediaId}`);
+    } else {
+      await sendMessage('⚠️ Instagram failed to process the photo.');
+    }
+  } catch (error) {
+    await handleBotError(error, { context: 'Instagram API', bot: null, chatId: null });
+    await sendMessage(`💥 Error posting to Instagram: ${error.message}`);
+  }
+}
+
+export async function postQueuedPhotoToInstagram(imageUrl, caption, sendMessage) {
+  return postPhotoToInstagram(imageUrl, caption, sendMessage);
 }

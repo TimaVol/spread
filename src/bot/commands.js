@@ -173,5 +173,22 @@ export function registerBotCommands(bot, messages, { getYouTubeAuthUrl }) {
       await handleBotError(err, { chatId, bot, context: '/videos' });
     }
   });
+
+  bot.onText(/^\/generate$/, async (msg) => {
+    const chatId = msg.chat.id;
+    try {
+      if (parseInt(TELEGRAM_AUTHORIZED_USER_ID, 10) !== chatId) {
+        await bot.sendMessage(chatId, messages.unauthorized(chatId));
+        return;
+      }
+      
+      // Trigger photo generation handler
+      // This will be handled by the registerPhotoGenerationHandlers function
+      await bot.emit('generatePhoto', { chatId });
+    } catch (err) {
+      await handleBotError(err, { chatId, bot, context: '/generate' });
+    }
+  });
+
   // Add more command handlers here as needed
 }
