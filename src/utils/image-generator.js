@@ -23,7 +23,7 @@ async function submitGenerationTask(prompt) {
 
     logger.info('Submitting image generation task to Nano Banana', { prompt: prompt.substring(0, 100) });
 
-    const response = await fetch(`${NANOBANANA_API_BASE}/generate-pro`, {
+    const response = await fetch(`${NANOBANANA_API_BASE}/generate`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${NANOBANANA_API_KEY}`,
@@ -31,8 +31,8 @@ async function submitGenerationTask(prompt) {
       },
       body: JSON.stringify({
         prompt: prompt,
-        resolution: '2K',
-        aspectRatio: '1:1',
+        numImages: 1,
+        image_size: "16:9",
         callBackUrl: NANOBANANA_CALLBACK_URL,
       }),
     });
@@ -170,18 +170,15 @@ export async function generatePhotoWithRetry(prompt, maxRetries = 3) {
 }
 
 /**
- * Exported for webhook handler - poll and download image when callback is received
- * @param {string} taskId - Task ID from webhook
+ * Exported for webhook handler - download image from URL
+ * @param {string} imageUrl - Direct image URL from Nano Banana callback
  * @returns {Promise<Buffer>} Downloaded image as Buffer
  */
-export async function getCompletedImage(taskId) {
+export async function getCompletedImage(imageUrl) {
   try {
-    // Poll once to verify completion
-    const imageUrl = await pollTaskStatus(taskId);
-    // Download and return image
     return await downloadImage(imageUrl);
   } catch (error) {
-    logger.error('Error getting completed image', { taskId, error: error.message });
+    logger.error('Error getting completed image', { url: imageUrl.substring(0, 50), error: error.message });
     throw error;
   }
 }

@@ -30,35 +30,45 @@ app.get('/', (req, res) => {
 
 app.post('/nanobanana-callback', async (req, res) => {
   try {
-    const { data } = req.body;
-    if (!data) {
-      logger.warn('Nano Banana callback received without data');
-      return res.status(400).send('Missing data field');
+    const { code, msg, data } = req.body;
+    
+    if (!data || !data.taskId) {
+      logger.warn('Nano Banana callback received without taskId');
+      return res.status(400).send('Missing taskId in callback');
     }
 
-    const { taskId, successFlag, response, errorMessage } = data;
-    logger.info('Nano Banana callback received', { taskId, successFlag });
+    logger.info('Nano Banana callback received', { taskId: data.taskId, code, msg });
 
     // Get the task and associated chat ID
-    const task = getTask(taskId);
+    const task = getTask(data.taskId);
     if (!task) {
-      logger.warn('Task not found in tracker', { taskId });
+      logger.warn('Task not found in tracker', { taskId: data.taskId });
       return res.status(404).send('Task not found');
     }
 
     const { chatId } = task;
 
-    // Check if generation was successful
-    if (successFlag !== 1) {
-      logger.error('Image generation failed', { taskId, successFlag, errorMessage });
-      await bot.sendMessage(chatId, `❌ Image generation failed: ${errorMessage || 'Unknown error'}`);
-      removeTask(taskId);
+    // Check response code
+    if (code !== 200) {
+      logger.error('Image generation failed', { taskId: data.taskId, code, msg });
+      await bot.sendMessage(chatId, `❌ Image generation failed: ${msg || 'Unknown error'}`);
+      removeTask(data.taskId);
       return res.status(200).send('Error notification sent');
     }
 
-    // Download completed image
-    const imageBuffer = await getCompletedImage(taskId);
-    logger.info('Image downloaded from callback', { taskId, size: imageBuffer.length });
+    // Get image URL from callback
+    const imageUrl = data.info?.resultImageUrl;
+    if (!imageUrl) {
+      logger.error('No image URL in success callback', { taskId: data.taskId });
+      await bot.sendMessage(chatId, '❌ Image generation succeeded but no URL provided');
+      removeTask(data.taskId);
+      return res.status(200).send('No URL error sent');
+    }
+
+    // Download image from URL
+    logger.info('Downloading image from callback URL', { taskId: data.taskId, url: imageUrl.substring(0, 50) });
+    const imageBuffer = await getCompletedImage(imageUrl);
+    logger.info('Image downloaded', { taskId: data.taskId, size: imageBuffer.length });
 
     // Send image with action buttons
     const keyboard = {
@@ -79,7 +89,7 @@ app.post('/nanobanana-callback', async (req, res) => {
     });
 
     // Clean up task tracking
-    removeTask(taskId);
+    removeTask(data.taskId);
 
     res.status(200).send('Image sent to user');
   } catch (err) {
