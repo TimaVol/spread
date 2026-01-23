@@ -6,6 +6,8 @@ import { listQueuedMedia, deleteFromSupabase, ensureTmpDirExists, getLocalVideoP
 import { postQueuedReelToInstagram, postQueuedPhotoToInstagram } from './platforms/instagram.js';
 import { uploadQueuedYouTubeShort } from './platforms/youtube.js';
 import { generateCaption } from './utils/caption-generator.js';
+import { getCompletedImage } from './utils/image-generator.js';
+import { getTask, removeTask } from './utils/task-tracker.js';
 import { bot } from './bots/telegramBot.js';
 import { logger } from './utils/logger.js';
 import { handleBotError } from './utils/error_handler.js';
@@ -24,6 +26,66 @@ setupYouTubeOAuthCallback(app);
 
 app.get('/', (req, res) => {
   res.send('Telegram Instagram Reel Bot server is running! Webhook configured.');
+});
+
+app.post('/nanobanana-callback', async (req, res) => {
+  try {
+    const { data } = req.body;
+    if (!data) {
+      logger.warn('Nano Banana callback received without data');
+      return res.status(400).send('Missing data field');
+    }
+
+    const { taskId, successFlag, response, errorMessage } = data;
+    logger.info('Nano Banana callback received', { taskId, successFlag });
+
+    // Get the task and associated chat ID
+    const task = getTask(taskId);
+    if (!task) {
+      logger.warn('Task not found in tracker', { taskId });
+      return res.status(404).send('Task not found');
+    }
+
+    const { chatId } = task;
+
+    // Check if generation was successful
+    if (successFlag !== 1) {
+      logger.error('Image generation failed', { taskId, successFlag, errorMessage });
+      await bot.sendMessage(chatId, `❌ Image generation failed: ${errorMessage || 'Unknown error'}`);
+      removeTask(taskId);
+      return res.status(200).send('Error notification sent');
+    }
+
+    // Download completed image
+    const imageBuffer = await getCompletedImage(taskId);
+    logger.info('Image downloaded from callback', { taskId, size: imageBuffer.length });
+
+    // Send image with action buttons
+    const keyboard = {
+      inline_keyboard: [
+        [
+          { text: '🔄 Regenerate', callback_data: 'regenerate_' + Date.now() },
+          { text: '💾 Save', callback_data: 'save_' + Date.now() },
+        ],
+        [
+          { text: '❌ Abort', callback_data: 'abort_' + Date.now() },
+        ],
+      ],
+    };
+
+    await bot.sendPhoto(chatId, imageBuffer, {
+      caption: messages.photoReady,
+      reply_markup: keyboard,
+    });
+
+    // Clean up task tracking
+    removeTask(taskId);
+
+    res.status(200).send('Image sent to user');
+  } catch (err) {
+    logger.error('Error in Nano Banana callback handler', { error: err.message });
+    res.status(500).send('Internal server error');
+  }
 });
 
 app.post('/process-queue', async (req, res) => {

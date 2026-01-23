@@ -17,3 +17,5 @@ export const CRON_SECRET_TOKEN = process.env.CRON_SECRET_TOKEN;
 export const CAPTION = process.env.CAPTION || 'Here is the #anime edit';
 export const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 export const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite';
+export const NANOBANANA_API_KEY = process.env.NANOBANANA_API_KEY;
+export const NANOBANANA_CALLBACK_URL = process.env.NANOBANANA_CALLBACK_URL;

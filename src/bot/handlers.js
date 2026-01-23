@@ -3,6 +3,7 @@ import { TELEGRAM_BOT_TOKEN, TELEGRAM_AUTHORIZED_USER_ID } from '../config/index
 import { logger } from '../utils/logger.js';
 import { generatePhotoPrompt } from '../utils/caption-generator.js';
 import { generatePhotoWithRetry } from '../utils/image-generator.js';
+import { storeTask, removeTask } from '../utils/task-tracker.js';
 
 // fileHandler: { ensureTmpDirExists, getLocalVideoPath, deleteLocalFile, uploadToSupabase, deleteFromSupabase }
 export function registerMessageHandlers(bot, messages, fileHandler, errorHandler) {
@@ -121,28 +122,16 @@ async function handleGeneratePhoto(bot, chatId, messages, fileHandler, errorHand
     const photoPrompt = await generatePhotoPrompt();
     logger.info('Generated photo prompt', { chatId, promptLength: photoPrompt.length });
 
-    // Step 2: Generate image with Nano Banana
+    // Step 2: Submit generation task to Nano Banana (returns taskId, image comes via webhook)
     await sendMessage(messages.generatingPhoto);
-    const imageBuffer = await generatePhotoWithRetry(photoPrompt);
-    logger.info('Generated image', { chatId, imageSize: imageBuffer.length });
+    const taskId = await generatePhotoWithRetry(photoPrompt);
+    logger.info('Submitted image generation task', { chatId, taskId });
 
-    // Step 3: Send image with action buttons
-    const keyboard = {
-      inline_keyboard: [
-        [
-          { text: '🔄 Regenerate', callback_data: 'regenerate_' + Date.now() },
-          { text: '💾 Save', callback_data: 'save_' + Date.now() },
-        ],
-        [
-          { text: '❌ Abort', callback_data: 'abort_' + Date.now() },
-        ],
-      ],
-    };
+    // Store task ID mapping for webhook callback
+    storeTask(taskId, chatId);
 
-    await bot.sendPhoto(chatId, imageBuffer, {
-      caption: messages.photoReady,
-      reply_markup: keyboard,
-    });
+    // Step 3: Send waiting message
+    await sendMessage(`⏳ Generating image... Task ID: \`${taskId}\`\n\nYou'll receive the image when ready.`);
   } catch (err) {
     await errorHandler(err, { chatId, bot, context: 'Photo Generation' });
   }
